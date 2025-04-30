@@ -17,9 +17,23 @@ export interface ToolParameters {
   };
 }
 
+export interface ToolDimensoes {
+  "Ø": number;
+  "RC": number;
+  "Rib.": number;
+  "Alt.": number;
+  "Lat. 2D": number;
+  "Sob. Esp.": number;
+}
+
+export interface Ferramenta {
+  nome: string;
+  dimensoes: ToolDimensoes;
+}
+
 export interface Tool {
   id: string;
-  name: string;
+  ferramenta: Ferramenta;
   type: string;
   function: string;
   parameters: ToolParameters;
@@ -69,6 +83,7 @@ export interface Measurement {
   isVerified: boolean;
   notes?: string;
 }
+
 
 
 

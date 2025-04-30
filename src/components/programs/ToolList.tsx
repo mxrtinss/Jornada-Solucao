@@ -29,7 +29,7 @@ const ToolList: React.FC<ToolListProps> = ({ tools }) => {
             </div>
             <div className="col-span-3">
               <h4 className="text-sm font-medium text-gray-600">FERRAMENTA</h4>
-              <p className="text-sm">{tool.name}</p>
+              <p className="text-sm">{tool.ferramenta.nome}</p>
             </div>
           </div>
 
@@ -39,25 +39,21 @@ const ToolList: React.FC<ToolListProps> = ({ tools }) => {
                 <tbody>
                   <tr>
                     <td className="py-1 pr-4">Ø</td>
-                    <td className="py-1">48</td>
+                    <td className="py-1">{tool.ferramenta.dimensoes['Ø']}</td>
                     <td className="py-1 pr-4 pl-8">RC</td>
-                    <td className="py-1">-</td>
+                    <td className="py-1">{tool.ferramenta.dimensoes['RC']}</td>
                   </tr>
                   <tr>
                     <td className="py-1 pr-4">Rib.</td>
-                    <td className="py-1">247</td>
+                    <td className="py-1">{tool.ferramenta.dimensoes['Rib.']}</td>
                     <td className="py-1 pr-4 pl-8">Alt.</td>
-                    <td className="py-1">273</td>
+                    <td className="py-1">{tool.ferramenta.dimensoes['Alt.']}</td>
                   </tr>
                   <tr>
                     <td className="py-1 pr-4">Lat. 2D</td>
-                    <td className="py-1">-</td>
-                    <td className="py-1 pr-4 pl-8">Lat.</td>
-                    <td className="py-1">-</td>
-                  </tr>
-                  <tr>
-                    <td className="py-1 pr-4">Vert.</td>
-                    <td className="py-1">3</td>
+                    <td className="py-1">{tool.ferramenta.dimensoes['Lat. 2D']}</td>
+                    <td className="py-1 pr-4 pl-8">Sob. Esp.</td>
+                    <td className="py-1">{tool.ferramenta.dimensoes['Sob. Esp.']}</td>
                   </tr>
                 </tbody>
               </table>
@@ -84,4 +80,5 @@ const ToolList: React.FC<ToolListProps> = ({ tools }) => {
 };
 
 export default ToolList;
+
 

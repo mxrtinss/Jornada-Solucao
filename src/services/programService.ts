@@ -11,7 +11,17 @@ const mockPrograms: Program[] = [
     tools: [
       {
         id: '1',
-        name: 'BK_TOPDRIL_D44_SSD_701800022',
+        ferramenta: {
+          nome: 'BK_TOPDRIL_D44_SSD_701800022',
+          dimensoes: {
+            "Ø": 48,
+            "RC": 247,
+            "Rib.": 273,
+            "Alt.": 0,
+            "Lat. 2D": 0,
+            "Sob. Esp.": 3
+          }
+        },
         type: 'Corte',
         function: 'Desbaste',
         parameters: {
@@ -48,7 +58,17 @@ const mockPrograms: Program[] = [
     tools: [
       {
         id: '4',
-        name: 'BK_TOPDRIL_D44_SSD_701800011',
+        ferramenta: {
+          nome: 'BK_TOPDRIL_D44_SSD_701800011',
+          dimensoes: {
+            "Ø": 48,
+            "RC": 247,
+            "Rib.": 273,
+            "Alt.": 0,
+            "Lat. 2D": 0,
+            "Sob. Esp.": 3
+          }
+        },
         type: 'Furação',
         function: 'Centro',
         parameters: {
@@ -185,6 +205,7 @@ export const getDashboardData = async (): Promise<DashboardData> => {
     }, 1000);
   });
 };
+
 
 
 

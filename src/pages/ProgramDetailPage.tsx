@@ -15,6 +15,7 @@ import DateTimeInput from '../components/ui/DateTimeInput';
 import ImageModal from '../components/ui/ImageModal';
 import { hfs } from '@humanfs/node';
 import RecentCompletions from '../components/dashboard/RecentCompletions';
+import ToolDetails from '../components/programs/ToolDetails';
 
 const ProgramDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -23,6 +24,7 @@ const ProgramDetailPage: React.FC = () => {
   const [program, setProgram] = useState<Program | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
 
   useEffect(() => {
     const loadProgram = async () => {
@@ -242,8 +244,20 @@ const ProgramDetailPage: React.FC = () => {
               </h3>
               <div className="space-y-2">
                 {program?.tools.map((tool, index) => (
-                  <div key={index} className="border border-gray-200 rounded-md p-3">
-                    <p className="text-sm font-medium">{tool.name}</p>
+                  <div 
+                    key={index} 
+                    className="border border-gray-200 rounded-md p-3 hover:bg-gray-50 cursor-pointer transition-colors"
+                    onClick={() => setSelectedTool(tool)}
+                  >
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="text-sm font-medium">{tool.ferramenta.nome}</p>
+                        <p className="text-xs text-gray-500">{tool.type} - {tool.function}</p>
+                      </div>
+                      <div className="text-gray-400 hover:text-gray-600">
+                        <span className="text-xs">Clique para detalhes</span>
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -410,6 +424,15 @@ const ProgramDetailPage: React.FC = () => {
           onClose={() => setIsImageModalOpen(false)}
         />
       </div>
+
+      {/* Tool Details Modal */}
+      {selectedTool && (
+        <ToolDetails
+          tool={selectedTool}
+          onClose={() => setSelectedTool(null)}
+        />
+      )}
+
       {showCompletion && program && (
         <RecentCompletions
           program={program}
@@ -424,6 +447,7 @@ const ProgramDetailPage: React.FC = () => {
 };
 
 export default ProgramDetailPage;
+
 
 
 

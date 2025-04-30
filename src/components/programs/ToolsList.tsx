@@ -30,11 +30,17 @@ const ToolsList: React.FC<ToolsListProps> = ({ tools }) => {
             </div>
             <div className="col-span-3">
               <h4 className="text-sm font-medium text-gray-600">FERRAMENTA</h4>
-              <p className="text-sm">{tool.name}</p>
+              <p className="text-sm">{tool.ferramenta.nome}</p>
             </div>
           </div>
           
           <div className="mt-3 grid grid-cols-3 gap-4">
+            <div>
+              <h4 className="text-sm font-medium text-gray-600">DIMENSÕES</h4>
+              {Object.entries(tool.ferramenta.dimensoes).map(([key, value]) => (
+                <p key={key} className="text-sm">{key}: {value}</p>
+              ))}
+            </div>
             <div>
               <h4 className="text-sm font-medium text-gray-600">PARÂMETROS</h4>
               <p className="text-sm">Vel: {tool.parameters.velocity}</p>
@@ -54,3 +60,4 @@ const ToolsList: React.FC<ToolsListProps> = ({ tools }) => {
 };
 
 export default ToolsList;
+
