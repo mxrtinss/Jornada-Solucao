@@ -56,8 +56,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const mockUser: User = {
           id: '1',
           username,
-          name: 'João Silva',
-          role: 'operator',
+          name: 'F1400',
+          role: 'maquina',
         };
         
         setUser(mockUser);

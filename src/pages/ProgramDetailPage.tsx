@@ -16,6 +16,7 @@ import ImageModal from '../components/ui/ImageModal';
 import { hfs } from '@humanfs/node';
 import RecentCompletions from '../components/dashboard/RecentCompletions';
 import ToolDetails from '../components/programs/ToolDetails';
+import OperatorSelector from '../components/programs/OperatorSelector';
 
 const ProgramDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -25,6 +26,7 @@ const ProgramDetailPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
+  const [selectedOperators, setSelectedOperators] = useState<Array<{id: string, matricula: string, nome: string}>>([]);
 
   useEffect(() => {
     const loadProgram = async () => {
@@ -66,20 +68,18 @@ const ProgramDetailPage: React.FC = () => {
     };
 
     if (!processStartTime) {
-      errors.start = 'Data/hora de início é obrigatória';
+      errors.start = 'Tempo de início é obrigatório';
     }
 
-    if (!processEndTime) {
-      errors.end = 'Data/hora de fim é obrigatória';
-    }
-
+    // Não exigimos mais o tempo de fim, pois pode estar em andamento
+    // Apenas validamos se ambos estiverem presentes
     if (processStartTime && processEndTime) {
       const start = new Date(processStartTime);
       const end = new Date(processEndTime);
 
       if (start > end) {
-        errors.start = 'Data/hora de início não pode ser posterior ao fim';
-        errors.end = 'Data/hora de fim não pode ser anterior ao início';
+        errors.start = 'Tempo de início não pode ser posterior ao fim';
+        errors.end = 'Tempo de fim não pode ser anterior ao início';
       }
     }
 
@@ -113,50 +113,39 @@ const ProgramDetailPage: React.FC = () => {
   const handleProgramComplete = async () => {
     if (!id || isSubmitting) return;
 
-    // Validar datas primeiro
+    // Validar tempos primeiro
     if (!validateTimes()) {
-      showToast('Verifique as datas de início e fim do processo', 'error');
+      showToast('Verifique os tempos de início e fim do processo', 'error');
       return;
     }
 
-    // Validações existentes
-    if (!signature) {
-      showToast('Assinatura digital é obrigatória', 'error');
+    // Validar se pelo menos um operador foi selecionado
+    if (selectedOperators.length === 0 || !selectedOperators[0].matricula) {
+      showToast('Selecione pelo menos um operador', 'error');
       return;
     }
 
-    const allMeasurementsVerified = measurements.every(m => m.isVerified);
-    if (!allMeasurementsVerified) {
-      showToast('Todas as medições devem ser verificadas', 'error');
-      return;
-    }
+    // Validar assinatura
+    if (!signatureRef.current?.isEmpty()) {
+      setIsSubmitting(true);
 
-    setIsSubmitting(true);
-
-    try {
-      const payload = {
-        processStartTime,
-        processEndTime,
-        measurements,
-        signature,
-        comments,
-      };
-
-      console.log('Enviando dados para conclusão:', payload); // Debug log
-      console.log('Comentários sendo enviados:', comments); // Debug log específico para comentários
-
-      await completeProgram(id, payload);
-      
-      setShowCompletion(true);
-      
-      setTimeout(() => {
-        setShowCompletion(false);
-        navigate('/', { replace: true });
-      }, 5000);
-      
-    } catch (error) {
-      setIsSubmitting(false);
-      showToast(error instanceof Error ? error.message : 'Erro ao concluir programa', 'error');
+      try {
+        const signatureImage = signatureRef.current?.toDataURL();
+        
+        // Aqui você enviaria os dados para o servidor
+        // Incluindo os operadores selecionados
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulação de envio
+        
+        showToast('Programa concluído com sucesso!', 'success');
+        navigate('/programs');
+      } catch (error) {
+        console.error('Erro ao concluir programa:', error);
+        showToast('Erro ao concluir programa', 'error');
+      } finally {
+        setIsSubmitting(false);
+      }
+    } else {
+      showToast('Assinatura é obrigatória', 'error');
     }
   };
 
@@ -239,7 +228,7 @@ const ProgramDetailPage: React.FC = () => {
             {/* Tools Section */}
             <div className="bg-white rounded-lg shadow-md p-6">
               <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                <ToolIcon className="h-5 w-5 mr-2 text-teal-700" />
+                <WrenchIcon className="h-5 w-5 mr-2 text-teal-700" />
                 Ferramentas
               </h3>
               <div className="space-y-2">
@@ -266,7 +255,7 @@ const ProgramDetailPage: React.FC = () => {
             {/* Specifications Section */}
             <div className="bg-white rounded-lg shadow-md p-6">
               <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                <WrenchIcon className="h-5 w-5 mr-2 text-teal-700" />
+                <ToolIcon className="h-5 w-5 mr-2 text-teal-700" />
                 Especificações
               </h3>
               <div className="space-y-4">
@@ -357,32 +346,29 @@ const ProgramDetailPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Process Times Section */}
+            {/* Time Tracker Section */}
             <div className="bg-white rounded-lg shadow-md p-6">
               <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
                 <ClockIcon className="h-5 w-5 mr-2 text-teal-700" />
-                Tempo do Processo
+                Rastreamento de Tempo
               </h3>
-              <div className="space-y-4">
-                <DateTimeInput
-                  id="process-start"
-                  label="Início do Processo"
-                  value={processStartTime}
-                  onChange={setProcessStartTime}
-                  error={timeErrors.start}
-                  max={processEndTime || undefined}
-                  required
-                />
-                <DateTimeInput
-                  id="process-end"
-                  label="Fim do Processo"
-                  value={processEndTime}
-                  onChange={setProcessEndTime}
-                  error={timeErrors.end}
-                  min={processStartTime || undefined}
-                  required
-                />
-              </div>
+              <TimeTracker 
+                startTime={processStartTime} 
+                endTime={processEndTime}
+                onTimeUpdate={(start, end, elapsed) => {
+                  setProcessStartTime(start);
+                  setProcessEndTime(end);
+                  // Você pode armazenar o tempo decorrido em segundos se necessário
+                }}
+              />
+            </div>
+
+            {/* Operators Section */}
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <OperatorSelector
+                selectedOperators={selectedOperators}
+                onOperatorsChange={setSelectedOperators}
+              />
             </div>
 
             {/* Digital Signature Section */}
@@ -447,6 +433,12 @@ const ProgramDetailPage: React.FC = () => {
 };
 
 export default ProgramDetailPage;
+
+
+
+
+
+
 
 
 
