@@ -1,16 +1,31 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useEffect, useState, forwardRef, useImperativeHandle } from 'react';
 import { RefreshCwIcon, CheckIcon } from 'lucide-react';
 import { Button } from '../ui/Button';
 
 interface DigitalSignatureProps {
-  onChange: (dataUrl: string) => void;
+  onChange?: (dataUrl: string) => void;
 }
 
-const DigitalSignature: React.FC<DigitalSignatureProps> = ({ onChange }) => {
+const DigitalSignature = forwardRef<any, DigitalSignatureProps>(({ onChange }, ref) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasSignature, setHasSignature] = useState(false);
-  
+  const [lastX, setLastX] = useState(0);
+  const [lastY, setLastY] = useState(0);
+
+  // Expor métodos para o componente pai através da ref
+  useImperativeHandle(ref, () => ({
+    toDataURL: () => {
+      return canvasRef.current?.toDataURL();
+    },
+    isEmpty: () => {
+      return !hasSignature;
+    },
+    clear: () => {
+      clearSignature();
+    }
+  }));
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -167,7 +182,8 @@ const DigitalSignature: React.FC<DigitalSignatureProps> = ({ onChange }) => {
       </p>
     </div>
   );
-};
+});
 
 export default DigitalSignature;
+
 

@@ -11,6 +11,9 @@ const MeasurementVerification: React.FC<MeasurementVerificationProps> = ({
   onChange,
   isRequired = true
 }) => {
+  // Adicione um log para depuração
+  console.log("MeasurementVerification renderizado com valor:", value);
+  
   return (
     <div className="border border-gray-200 rounded-md p-4">
       <div className="mb-2">
@@ -23,7 +26,10 @@ const MeasurementVerification: React.FC<MeasurementVerificationProps> = ({
         className="w-full min-h-[120px] p-2 border border-gray-300 rounded-md text-sm"
         placeholder="Descreva aqui as verificações de medidas realizadas..."
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => {
+          console.log("Valor do textarea alterado:", e.target.value);
+          onChange(e.target.value);
+        }}
         required={isRequired}
       />
     </div>

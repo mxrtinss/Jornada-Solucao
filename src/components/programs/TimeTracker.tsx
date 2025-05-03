@@ -25,6 +25,11 @@ const TimeTracker: React.FC<TimeTrackerProps> = ({
   const [pausedTime, setPausedTime] = useState<number>(0);
   const [timeLog, setTimeLog] = useState<Array<{start: Date, end: Date | null}>>([]);
   
+  // Adicione esta função para verificar se o tempo está completo (iniciado e finalizado)
+  const isTimeTrackingComplete = (): boolean => {
+    return !!trackingStartTime && !!trackingEndTime;
+  };
+  
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
     
@@ -147,31 +152,31 @@ const TimeTracker: React.FC<TimeTrackerProps> = ({
     return formattedTime;
   };
   
-  const exportTimeLog = () => {
-    // Prepare data for export
-    const csvContent = [
-      ['Início', 'Fim', 'Duração (segundos)'].join(','),
-      ...timeLog.map(entry => {
-        const start = entry.start.toLocaleString();
-        const end = entry.end ? entry.end.toLocaleString() : 'Em andamento';
-        const duration = entry.end 
-          ? Math.floor((entry.end.getTime() - entry.start.getTime()) / 1000) 
-          : 'N/A';
-        return [start, end, duration].join(',');
-      })
-    ].join('\n');
-    
-    // Create download link
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `time-log-${new Date().toISOString()}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+  // const exportTimeLog = () => {
+  //   // Prepare data for export
+  //   const csvContent = [
+  //     ['Início', 'Fim', 'Duração (segundos)'].join(','),
+  //     ...timeLog.map(entry => {
+  //       const start = entry.start.toLocaleString();
+  //       const end = entry.end ? entry.end.toLocaleString() : 'Em andamento';
+  //       const duration = entry.end 
+  //         ? Math.floor((entry.end.getTime() - entry.start.getTime()) / 1000) 
+  //         : 'N/A';
+  //       return [start, end, duration].join(',');
+  //     })
+  //   ].join('\n');
+  //   
+  //   // Create download link
+  //   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  //   const url = URL.createObjectURL(blob);
+  //   const link = document.createElement('a');
+  //   link.setAttribute('href', url);
+  //   link.setAttribute('download', `time-log-${new Date().toISOString()}.csv`);
+  //   link.style.visibility = 'hidden';
+  //   document.body.appendChild(link);
+  //   link.click();
+  //   document.body.removeChild(link);
+  // };
   
   return (
     <div className="space-y-4">
@@ -192,12 +197,35 @@ const TimeTracker: React.FC<TimeTrackerProps> = ({
         )}
       </div>
       
-      <div className="flex flex-col items-center p-4 border border-gray-200 rounded-lg bg-gray-50">
+      <div className="flex flex-col items-center p-4 border rounded-lg bg-gray-50"
+        style={{ 
+          borderColor: isRunning ? 'rgb(234, 179, 8)' : 
+                      (trackingEndTime ? 'rgb(34, 197, 94)' : 'rgb(229, 231, 235)')
+        }}
+      >
         <div className="text-xs text-gray-500 mb-1">Tempo Total</div>
         <div className="text-3xl font-mono font-semibold text-gray-800 flex items-center">
           <Clock className="h-5 w-5 mr-2 text-teal-700" />
           {formatTime(elapsedTime)}
         </div>
+        
+        {isRunning && (
+          <div className="mt-2 text-xs text-yellow-600 font-medium">
+            Rastreamento em andamento
+          </div>
+        )}
+        
+        {trackingEndTime && (
+          <div className="mt-2 text-xs text-green-600 font-medium">
+            Rastreamento concluído
+          </div>
+        )}
+        
+        {!isRunning && !trackingEndTime && trackingStartTime && (
+          <div className="mt-2 text-xs text-orange-600 font-medium">
+            Rastreamento pausado
+          </div>
+        )}
       </div>
       
       <div className="flex justify-center space-x-3">
@@ -252,6 +280,8 @@ const TimeTracker: React.FC<TimeTrackerProps> = ({
         )}
       </div>
       
+      {/* Remover o botão de exportação de CSV abaixo */}
+      {/* 
       {timeLog.length > 0 && trackingEndTime && (
         <div className="mt-4">
           <Button 
@@ -263,11 +293,15 @@ const TimeTracker: React.FC<TimeTrackerProps> = ({
           </Button>
         </div>
       )}
+      */}
     </div>
   );
 };
 
 export default TimeTracker;
+
+
+
 
 
 

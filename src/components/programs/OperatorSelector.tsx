@@ -67,6 +67,11 @@ export const OperatorSelector: React.FC<OperatorSelectorProps> = ({
     setOperators(updatedOperators);
   };
 
+  // Função de validação para operadores
+  const isOperatorValid = (operator: Operator): boolean => {
+    return !!operator.matricula && !!operator.nome;
+  };
+
   // Inicializar com um operador vazio se não houver nenhum
   useEffect(() => {
     if (operators.length === 0) {
@@ -82,7 +87,14 @@ export const OperatorSelector: React.FC<OperatorSelectorProps> = ({
       </div>
       
       {operators.map((operator, index) => (
-        <div key={operator.id} className="flex flex-col space-y-2 p-3 border border-gray-200 rounded-lg bg-white">
+        <div 
+          key={operator.id} 
+          className={`flex flex-col space-y-2 p-3 border rounded-lg bg-white ${
+            operator.matricula ? 
+              (isOperatorValid(operator) ? 'border-green-200' : 'border-red-200') : 
+              'border-gray-200'
+          }`}
+        >
           <div className="flex items-center justify-between">
             <label htmlFor={`operator-${index}`} className="text-sm font-medium text-gray-600">
               Matrícula do Operador
@@ -103,16 +115,18 @@ export const OperatorSelector: React.FC<OperatorSelectorProps> = ({
               id={`operator-${index}`}
               value={operator.matricula}
               onChange={(e) => updateOperatorMatricula(index, e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
+              className={`w-full p-2 border rounded-md focus:ring-teal-500 focus:border-teal-500 ${
+                operator.matricula && !isOperatorValid(operator) ? 'border-red-300' : 'border-gray-300'
+              }`}
             >
               <option value="">Selecione uma matrícula</option>
               {MOCK_OPERATORS.map((op) => (
                 <option 
                   key={op.id} 
                   value={op.matricula}
-                  disabled={operators.some(
-                    (selectedOp) => selectedOp.id === op.id && selectedOp.id !== operator.id
-                  )}
+                  // disabled={operators.some(
+                  //   (selectedOp) => selectedOp.id === op.id && selectedOp.id !== operator.id
+                  // )}
                 >
                   {op.matricula}
                 </option>
@@ -122,6 +136,12 @@ export const OperatorSelector: React.FC<OperatorSelectorProps> = ({
             {operator.nome && (
               <div className="text-sm text-gray-700 bg-gray-50 p-2 rounded-md">
                 <span className="font-medium">Nome:</span> {operator.nome}
+              </div>
+            )}
+            
+            {operator.matricula && !operator.nome && (
+              <div className="text-sm text-red-500">
+                Matrícula inválida ou não encontrada
               </div>
             )}
           </div>
@@ -141,3 +161,5 @@ export const OperatorSelector: React.FC<OperatorSelectorProps> = ({
 };
 
 export default OperatorSelector;
+
+

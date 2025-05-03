@@ -27,6 +27,12 @@ const ProgramDetailPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
   const [selectedOperators, setSelectedOperators] = useState<Array<{id: string, matricula: string, nome: string}>>([]);
+  
+  // Adicione esta linha para definir a referência
+  const signatureRef = React.useRef<any>(null);
+
+  // Adicione este estado no início do componente
+  const [measurementVerified, setMeasurementVerified] = useState(false);
 
   useEffect(() => {
     const loadProgram = async () => {
@@ -36,6 +42,12 @@ const ProgramDetailPage: React.FC = () => {
         console.log('Programa carregado na página:', data); // Debug log
         console.log('Comentários na página:', data.comments); // Debug log específico para comentários
         setProgram(data);
+        
+        // Inicializar as notas de medição se existirem no programa
+        if (data.measurementNotes) {
+          console.log('Notas de medição carregadas:', data.measurementNotes);
+          setMeasurementNotes(data.measurementNotes);
+        }
       } catch (error) {
         console.error('Erro ao carregar programa:', error);
         setError(error instanceof Error ? error.message : 'Erro ao carregar programa');
@@ -87,7 +99,9 @@ const ProgramDetailPage: React.FC = () => {
     return !errors.start && !errors.end;
   };
 
+  // Função para atualizar as notas de medição com log para depuração
   const handleMeasurementNotesChange = (notes: string) => {
+    console.log("Notas de medição atualizadas:", notes);
     setMeasurementNotes(notes);
   };
 
@@ -111,41 +125,114 @@ const ProgramDetailPage: React.FC = () => {
   };
 
   const handleProgramComplete = async () => {
-    if (!id || isSubmitting) return;
-
-    // Validar tempos primeiro
-    if (!validateTimes()) {
-      showToast('Verifique os tempos de início e fim do processo', 'error');
+    console.log("Função handleProgramComplete iniciada");
+    
+    if (!id || isSubmitting) {
+      console.log("Saindo da função: id não encontrado ou já está enviando");
       return;
     }
 
-    // Validar se pelo menos um operador foi selecionado
-    if (selectedOperators.length === 0 || !selectedOperators[0].matricula) {
-      showToast('Selecione pelo menos um operador', 'error');
+    // Array para armazenar mensagens de erro
+    const errors = [];
+
+    // 1. Validar Verificação de Medidas
+    console.log("Verificação de medidas concluída?", measurementVerified);
+    
+    if (!measurementVerified) {
+      errors.push('Confirme a verificação de medidas clicando no botão "Confirmar Verificação"');
+    }
+
+    // 2. Validar Rastreamento de Tempo
+    console.log("Validando tempos:", processStartTime, processEndTime);
+    if (!processStartTime) {
+      errors.push('Inicie o rastreamento de tempo');
+    }
+    
+    if (!processEndTime) {
+      errors.push('Finalize o rastreamento de tempo clicando em "Parar"');
+    }
+
+    // 3. Validar Operadores
+    console.log("Validando operadores:", selectedOperators);
+    const hasValidOperators = selectedOperators && 
+      selectedOperators.length > 0 && 
+      selectedOperators.some(op => op.matricula && op.nome);
+    
+    if (!hasValidOperators) {
+      errors.push('Selecione pelo menos um operador válido');
+    }
+
+    // 4. Validar Assinatura Digital
+    const hasSignature = signatureRef && signatureRef.current && !signatureRef.current.isEmpty();
+    console.log("Validando assinatura:", hasSignature);
+    
+    if (!hasSignature) {
+      errors.push('A assinatura digital é obrigatória');
+    }
+
+    // Se houver erros, exibir mensagens e interromper o processo
+    if (errors.length > 0) {
+      console.log("Erros encontrados:", errors);
+      // Exibir todos os erros em uma única mensagem
+      showToast(`Para concluir o programa: ${errors.join('; ')}`, 'error');
       return;
     }
 
-    // Validar assinatura
-    if (!signatureRef.current?.isEmpty()) {
-      setIsSubmitting(true);
+    console.log("Todas as validações passaram, enviando dados...");
+    // Se chegou aqui, todas as validações passaram
+    setIsSubmitting(true);
 
-      try {
-        const signatureImage = signatureRef.current?.toDataURL();
-        
-        // Aqui você enviaria os dados para o servidor
-        // Incluindo os operadores selecionados
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulação de envio
-        
-        showToast('Programa concluído com sucesso!', 'success');
-        navigate('/programs');
-      } catch (error) {
-        console.error('Erro ao concluir programa:', error);
-        showToast('Erro ao concluir programa', 'error');
-      } finally {
-        setIsSubmitting(false);
-      }
+    try {
+      const signatureImage = signatureRef.current?.toDataURL();
+      
+      // Preparar dados para envio
+      const programData = {
+        id,
+        measurements,
+        timeTracking: {
+          startTime: processStartTime,
+          endTime: processEndTime
+        },
+        operators: selectedOperators,
+        signature: signatureImage
+      };
+      
+      console.log('Enviando dados do programa:', programData);
+      
+      // Simulação de envio para o servidor
+      await completeProgram(id, {
+        processStartTime,
+        processEndTime,
+        measurements,
+        signature: signatureImage,
+        comments: ''
+      });
+      
+      console.log("Programa concluído com sucesso!");
+      showToast('Programa concluído com sucesso! Redirecionando em 5 segundos...', 'success');
+      setShowCompletion(true);
+      
+      // Adicionar temporizador para redirecionar após 5 segundos
+      setTimeout(() => {
+        navigate('/', { replace: true });
+      }, 5000);
+    } catch (error) {
+      console.error('Erro ao concluir programa:', error);
+      showToast('Erro ao concluir programa. Tente novamente.', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Adicione esta função para lidar com a verificação
+  const handleMeasurementVerify = () => {
+    if (measurementNotes && measurementNotes.trim().length > 0) {
+      console.log("Verificação de medidas confirmada");
+      setMeasurementVerified(true);
+      showToast("Verificação de medidas confirmada com sucesso!", "success");
     } else {
-      showToast('Assinatura é obrigatória', 'error');
+      console.log("Não é possível verificar: campo vazio");
+      showToast("Preencha o campo de verificação de medidas", "error");
     }
   };
 
@@ -173,6 +260,12 @@ const ProgramDetailPage: React.FC = () => {
       </div>
     );
   }
+
+  // Remover esta função de teste
+  // const testToast = () => {
+  //   console.log("Testando toast");
+  //   showToast("Teste de mensagem toast", "info");
+  // };
 
   return (
     <>
@@ -301,6 +394,8 @@ const ProgramDetailPage: React.FC = () => {
                 onChange={handleMeasurementChange}
                 measurementNotes={measurementNotes}
                 onNotesChange={handleMeasurementNotesChange}
+                isVerified={measurementVerified}
+                onVerify={handleMeasurementVerify}
               />
             </div>
 
@@ -377,13 +472,16 @@ const ProgramDetailPage: React.FC = () => {
                 <SaveIcon className="h-5 w-5 mr-2 text-teal-700" />
                 Assinatura Digital
               </h3>
-              <DigitalSignature onChange={handleSignatureChange} />
+              <DigitalSignature ref={signatureRef} onChange={handleSignatureChange} />
             </div>
 
             {/* Submit Button */}
             <div className="bg-white rounded-lg shadow-md p-6">
               <Button
-                onClick={handleProgramComplete}
+                onClick={() => {
+                  console.log("Botão Concluir Programa clicado");
+                  handleProgramComplete();
+                }}
                 disabled={isSubmitting}
                 variant="primary"
                 className="w-full flex items-center justify-center"
@@ -428,31 +526,21 @@ const ProgramDetailPage: React.FC = () => {
           }}
         />
       )}
+
+      {/* Remover o botão de teste de toast abaixo */}
+      {/* 
+      <button 
+        onClick={testToast}
+        className="px-4 py-2 bg-blue-500 text-white rounded-md mb-4"
+      >
+        Testar Toast
+      </button>
+      */}
     </>
   );
 };
 
 export default ProgramDetailPage;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
