@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reiniciar Projeto</title>
+  <style>
+    /* Estilos para tornar a página responsiva */
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+    .btn-reiniciar {
+      background-color: #2196f3;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .btn-reiniciar:hover {
+      background-color: #1976d2;
+    }
+    .mensagem-suspenso {
+      text-align: center;
+      max-width: 600px;
+      padding: 30px;
+      background-color: #f8d7da;
+      color: #721c24;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .mensagem-suspenso h2 {
+      margin-top: 0;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="conteudo-normal">
+    <button class="btn-reiniciar" id="btnReiniciar">Reiniciar Projeto</button>
+  </div>
+
+  <div id="mensagem-suspenso" class="mensagem-suspenso hidden">
+    <h2>Sistema Temporariamente Indisponível</h2>
+    <p>Nosso sistema está suspenso durante os finais de semana.</p>
+    <p>Horário de funcionamento: Segunda a Sexta-feira (24 horas)</p>
+    <p>O sistema voltará a funcionar na segunda-feira às 00:00.</p>
+  </div>
+
+  <script>
+    // Função para verificar se é final de semana (sábado ou domingo)
+    function verificarFinalDeSemana() {
+      const hoje = new Date();
+      const diaDaSemana = hoje.getDay(); // 0 = Domingo, 1 = Segunda, ..., 6 = Sábado
+      
+      // Verifica se é sábado (6) ou domingo (0)
+      return diaDaSemana === 0 || diaDaSemana === 6;
+    }
+    
+    // Função para mostrar ou esconder o conteúdo com base no dia da semana
+    function gerenciarVisibilidade() {
+      const conteudoNormal = document.getElementById('conteudo-normal');
+      const mensagemSuspenso = document.getElementById('mensagem-suspenso');
+      
+      if (verificarFinalDeSemana()) {
+        // É final de semana, mostrar mensagem de suspenso
+        conteudoNormal.classList.add('hidden');
+        mensagemSuspenso.classList.remove('hidden');
+      } else {
+        // Não é final de semana, mostrar conteúdo normal
+        conteudoNormal.classList.remove('hidden');
+        mensagemSuspenso.classList.add('hidden');
+        
+        // Adicionar evento de clique ao botão
+        document.getElementById('btnReiniciar').addEventListener('click', function() {
+          if (confirm('Tem certeza que deseja reiniciar este projeto? Todo o progresso será perdido.')) {
+            // Apaga os dados do projeto atual
+            localStorage.clear(); // Remove todos os dados do localStorage
+            alert('Projeto reiniciado com sucesso!');
+            window.location.reload(); // Recarrega a página
+          }
+        });
+      }
+    }
+    
+    // Executar a verificação quando a página carregar
+    document.addEventListener('DOMContentLoaded', gerenciarVisibilidade);
+  </script>
+</body>
+</html>
