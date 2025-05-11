@@ -206,6 +206,14 @@ export const getDashboardData = async (): Promise<DashboardData> => {
   });
 };
 
+export const getCompletedPrograms = async (): Promise<Program[]> => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(mockPrograms.filter(p => p.status === 'Concluído'));
+    }, 1000);
+  });
+};
+
 
 
 

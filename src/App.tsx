@@ -7,6 +7,7 @@ import ProgramDetailPage from './pages/ProgramDetailPage';
 import NotFoundPage from './pages/NotFoundPage';
 import Layout from './components/layout/Layout';
 import { ToastProvider } from './contexts/ToastContext';
+import CompletedProgramsPage from './pages/CompletedProgramsPage';
 
 // Protected route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -36,6 +37,12 @@ function App() {
             <Route path="/programs/:id" element={
               <ProtectedRoute>
                 <ProgramDetailPage />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/completed-programs" element={
+              <ProtectedRoute>
+                <CompletedProgramsPage />
               </ProtectedRoute>
             } />
             

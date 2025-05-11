@@ -1,12 +1,12 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { 
-  HomeIcon, 
+import {  
   LayoutDashboardIcon, 
   ClipboardListIcon, 
   SettingsIcon, 
   BarChartIcon, 
-  HelpCircleIcon 
+  HelpCircleIcon, 
+  CheckCircleIcon 
 } from 'lucide-react';
 import { LogoIcon } from '../icons/LogoIcon';
 import Tooltip from '../ui/Tooltip';
@@ -64,6 +64,20 @@ const Sidebar: React.FC = () => {
           >
             <BarChartIcon className="mr-3 h-6 w-6 flex-shrink-0" />
             Reports
+          </NavLink>
+          
+          <NavLink 
+            to="/completed-programs" 
+            className={({ isActive }) => 
+              `group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+                isActive 
+                  ? 'bg-teal-900 text-white' 
+                  : 'text-teal-100 hover:bg-teal-700 hover:text-white'
+              }`
+            }
+          >
+            <CheckCircleIcon className="mr-3 h-6 w-6 flex-shrink-0" />
+            Programas Concluídos
           </NavLink>
         </nav>
       </div>
