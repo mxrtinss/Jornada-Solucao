@@ -2,14 +2,11 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import {  
   LayoutDashboardIcon, 
-  ClipboardListIcon, 
-  SettingsIcon, 
-  BarChartIcon, 
-  HelpCircleIcon, 
-  CheckCircleIcon 
+  ClipboardListIcon,  
+  CheckCircleIcon,
+  UsersIcon 
 } from 'lucide-react';
 import { LogoIcon } from '../icons/LogoIcon';
-import Tooltip from '../ui/Tooltip';
 
 const Sidebar: React.FC = () => {
   return (
@@ -53,20 +50,6 @@ const Sidebar: React.FC = () => {
           </NavLink>
           
           <NavLink 
-            to="/reports" 
-            className={({ isActive }) => 
-              `group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
-                isActive 
-                  ? 'bg-teal-900 text-white' 
-                  : 'text-teal-100 hover:bg-teal-700 hover:text-white'
-              }`
-            }
-          >
-            <BarChartIcon className="mr-3 h-6 w-6 flex-shrink-0" />
-            Reports
-          </NavLink>
-          
-          <NavLink 
             to="/completed-programs" 
             className={({ isActive }) => 
               `group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
@@ -79,26 +62,22 @@ const Sidebar: React.FC = () => {
             <CheckCircleIcon className="mr-3 h-6 w-6 flex-shrink-0" />
             Programas Concluídos
           </NavLink>
-        </nav>
-      </div>
-      
-      {/* Bottom links */}
-      <div className="p-4 border-t border-teal-700">
-        <div className="space-y-3">
-          <Tooltip content="Ajuda e Documentação">
-            <button className="group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-teal-100 hover:bg-teal-700 hover:text-white">
-              <HelpCircleIcon className="mr-3 h-6 w-6 flex-shrink-0" />
-              Ajuda
-            </button>
-          </Tooltip>
           
-          <Tooltip content="Configurações do Sistema">
-            <button className="group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-teal-100 hover:bg-teal-700 hover:text-white">
-              <SettingsIcon className="mr-3 h-6 w-6 flex-shrink-0" />
-              Configurações
-            </button>
-          </Tooltip>
-        </div>
+          {/* Link para a página de funcionários */}
+          <NavLink 
+            to="/employees" 
+            className={({ isActive }) => 
+              `group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+                isActive 
+                  ? 'bg-teal-900 text-white' 
+                  : 'text-teal-100 hover:bg-teal-700 hover:text-white'
+              }`
+            }
+          >
+            <UsersIcon className="mr-3 h-6 w-6 flex-shrink-0" />
+            Funcionários
+          </NavLink>
+        </nav>
       </div>
     </div>
   );
