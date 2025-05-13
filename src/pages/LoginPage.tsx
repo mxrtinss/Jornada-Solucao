@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
-import { EyeIcon, EyeOffIcon, UserIcon, LockIcon, Loader2Icon } from 'lucide-react';
+import { UserIcon, LockIcon, Loader2Icon, EyeIcon, EyeOffIcon } from 'lucide-react';
 import { LogoIcon } from '../components/icons/LogoIcon';
 import { InputField } from '../components/ui/InputField';
 import { Button } from '../components/ui/Button';
@@ -15,10 +15,16 @@ const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
   
-  const { login } = useAuth();
+  const { login} = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Extrair parâmetro de redirecionamento da URL
+  const searchParams = new URLSearchParams(location.search);
+  const redirect = searchParams.get('redirect') || '/';
   
   const handleTogglePassword = () => {
     setShowPassword(!showPassword);
@@ -47,7 +53,7 @@ const LoginPage: React.FC = () => {
       
       if (success) {
         showToast('Login realizado com sucesso', 'success');
-        navigate('/');
+        navigate(redirect);
       } else {
         showToast('Usuário ou senha inválidos', 'error');
       }
@@ -93,6 +99,18 @@ const LoginPage: React.FC = () => {
               icon={<LockIcon className="h-5 w-5 text-gray-400" />}
               required
             />
+            <button
+              type="button"
+              onClick={handleTogglePassword}
+              className="absolute right-3 top-9 text-gray-400 hover:text-gray-600"
+              aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+            >
+              {showPassword ? (
+                <EyeOffIcon className="h-5 w-5" />
+              ) : (
+                <EyeIcon className="h-5 w-5" />
+              )}
+            </button>
           </div>
           
           <div className="flex items-center justify-between">
