@@ -1,65 +1,54 @@
 import React, { useState, useEffect } from 'react';
 import { User, Plus, X } from 'lucide-react';
+import { useMongoCollection } from '../../hooks/useMongoCollection';
+import { Operator } from '../../types';
 
-// Tipo para representar um operador
-interface Operator {
-  id: string;
-  matricula: string;
-  nome: string;
-}
-
-// Tipo para as props do componente
+// Type for the props of the component
 interface OperatorSelectorProps {
   selectedOperators: Operator[];
   onOperatorsChange: (operators: Operator[]) => void;
 }
 
-// Lista simulada de operadores (em produção, isso viria de uma API)
-const MOCK_OPERATORS: Operator[] = [
-  { id: '1', matricula: '12345', nome: 'João Silva' },
-  { id: '2', matricula: '23456', nome: 'Maria Oliveira' },
-  { id: '3', matricula: '34567', nome: 'Pedro Santos' },
-  { id: '4', matricula: '45678', nome: 'Ana Souza' },
-  { id: '5', matricula: '56789', nome: 'Carlos Ferreira' },
-  { id: '6', matricula: '67890', nome: 'Juliana Costa' },
-  { id: '7', matricula: '78901', nome: 'Roberto Almeida' },
-  { id: '8', matricula: '89012', nome: 'Fernanda Lima' },
-];
-
 export const OperatorSelector: React.FC<OperatorSelectorProps> = ({
   selectedOperators = [],
   onOperatorsChange,
 }) => {
-  // Estado para controlar os operadores selecionados
+  // Use our custom hook to get operators from MongoDB (funcionarios collection) with real-time updates
+  const { data: availableOperators, loading, error } = useMongoCollection<Operator>('funcionarios');
+  
+  // State for selected operators
   const [operators, setOperators] = useState<Operator[]>(selectedOperators);
   
-  // Efeito para notificar o componente pai quando os operadores mudarem
+  // Effect to notify parent component when operators change
   useEffect(() => {
     onOperatorsChange(operators);
   }, [operators, onOperatorsChange]);
 
-  // Função para adicionar um operador vazio (para ser preenchido)
+  // Function to add an empty operator (to be filled)
   const addEmptyOperator = () => {
-    setOperators([...operators, { id: `temp-${Date.now()}`, matricula: '', nome: '' }]);
+    setOperators([...operators, { matricula: '', nome: '' }]);
   };
 
-  // Função para remover um operador
+  // Function to remove an operator
   const removeOperator = (index: number) => {
     const updatedOperators = [...operators];
     updatedOperators.splice(index, 1);
     setOperators(updatedOperators);
   };
 
-  // Função para atualizar a matrícula de um operador
+  // Function to update an operator's matricula
   const updateOperatorMatricula = (index: number, matricula: string) => {
     const updatedOperators = [...operators];
     updatedOperators[index].matricula = matricula;
     
-    // Buscar o nome do operador com base na matrícula
-    const foundOperator = MOCK_OPERATORS.find(op => op.matricula === matricula);
+    // Find the operator with the matching matricula
+    const foundOperator = availableOperators?.find(op => op.matricula === matricula);
     if (foundOperator) {
-      updatedOperators[index].nome = foundOperator.nome;
-      updatedOperators[index].id = foundOperator.id;
+      updatedOperators[index] = {
+        ...foundOperator,
+        // Ensure we use MongoDB _id as our id
+        id: foundOperator._id
+      };
     } else {
       updatedOperators[index].nome = '';
     }
@@ -67,12 +56,12 @@ export const OperatorSelector: React.FC<OperatorSelectorProps> = ({
     setOperators(updatedOperators);
   };
 
-  // Função de validação para operadores
+  // Function to validate operators
   const isOperatorValid = (operator: Operator): boolean => {
     return !!operator.matricula && !!operator.nome;
   };
 
-  // Inicializar com um operador vazio se não houver nenhum
+  // Initialize with an empty operator if none exist
   useEffect(() => {
     if (operators.length === 0) {
       addEmptyOperator();
@@ -86,9 +75,22 @@ export const OperatorSelector: React.FC<OperatorSelectorProps> = ({
         <h3 className="text-lg font-semibold text-gray-800">Operadores</h3>
       </div>
       
-      {operators.map((operator, index) => (
+      {loading && (
+        <div className="text-center py-4">
+          <div className="inline-block animate-spin rounded-full h-6 w-6 border-t-2 border-teal-500 border-r-2 border-teal-500 border-b-2 border-transparent"></div>
+          <p className="mt-2 text-sm text-gray-600">Carregando operadores...</p>
+        </div>
+      )}
+      
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+          <p>Erro ao carregar operadores: {error.message}</p>
+        </div>
+      )}
+      
+      {!loading && !error && operators.map((operator, index) => (
         <div 
-          key={operator.id} 
+          key={operator._id || `temp-${index}`} 
           className={`flex flex-col space-y-2 p-3 border rounded-lg bg-white ${
             operator.matricula ? 
               (isOperatorValid(operator) ? 'border-green-200' : 'border-red-200') : 
@@ -120,13 +122,10 @@ export const OperatorSelector: React.FC<OperatorSelectorProps> = ({
               }`}
             >
               <option value="">Selecione uma matrícula</option>
-              {MOCK_OPERATORS.map((op) => (
+              {availableOperators?.map((op) => (
                 <option 
-                  key={op.id} 
+                  key={op._id} 
                   value={op.matricula}
-                  // disabled={operators.some(
-                  //   (selectedOp) => selectedOp.id === op.id && selectedOp.id !== operator.id
-                  // )}
                 >
                   {op.matricula}
                 </option>
@@ -161,5 +160,7 @@ export const OperatorSelector: React.FC<OperatorSelectorProps> = ({
 };
 
 export default OperatorSelector;
+
+
 
 

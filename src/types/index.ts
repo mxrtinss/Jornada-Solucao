@@ -9,16 +9,17 @@ export interface User {
 }
 
 // Tipo para funcionário
-export interface Employee {
-  id: string;
+export interface Operator {
+  _id?: string;
+  id?: string;
   matricula: string;
   nome: string;
-  cargo: string;
-  departamento: string;
-  email: string;
-  telefone: string;
-  dataAdmissao: string;
-  ativo: boolean;
+  cargo?: string;
+  departamento?: string;
+  email?: string;
+  telefone?: string;
+  dataAdmissao?: string;
+  ativo?: boolean;
 }
 
 

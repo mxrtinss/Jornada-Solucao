@@ -1,133 +1,79 @@
 import { Employee } from '../types/index';
+import { apiService } from './apiService';
 
-// Dados simulados para funcionários
-let mockEmployees: Employee[] = [
-  {
-    id: '1',
-    matricula: '12345',
-    nome: 'João Silva',
-    cargo: 'Operador CNC',
-    departamento: 'Produção',
-    email: 'joao.silva@empresa.com',
-    telefone: '(11) 98765-4321',
-    dataAdmissao: '2020-03-15',
-    ativo: true
-  },
-  {
-    id: '2',
-    matricula: '23456',
-    nome: 'Maria Oliveira',
-    cargo: 'Supervisora',
-    departamento: 'Produção',
-    email: 'maria.oliveira@empresa.com',
-    telefone: '(11) 91234-5678',
-    dataAdmissao: '2018-07-10',
-    ativo: true
-  },
-  {
-    id: '3',
-    matricula: '34567',
-    nome: 'Pedro Santos',
-    cargo: 'Técnico de Manutenção',
-    departamento: 'Manutenção',
-    email: 'pedro.santos@empresa.com',
-    telefone: '(11) 92345-6789',
-    dataAdmissao: '2019-11-05',
-    ativo: true
-  }
-];
-
-// Função para obter todos os funcionários
+/**
+ * Function to get all employees
+ * @returns Promise with array of employees
+ */
 export const getEmployees = async (): Promise<Employee[]> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve([...mockEmployees]); // Retorna uma cópia para evitar mutações acidentais
-    }, 500);
-  });
+  try {
+    return await apiService.getFuncionarios();
+  } catch (error) {
+    console.error('Error in getEmployees:', error);
+    throw error;
+  }
 };
 
-// Função para obter um funcionário específico
+/**
+ * Function to get a specific employee by ID
+ * @param id Employee ID
+ * @returns Promise with employee data
+ */
 export const getEmployee = async (id: string): Promise<Employee> => {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      const employee = mockEmployees.find(e => e.id === id);
-      if (employee) {
-        resolve({...employee}); // Retorna uma cópia para evitar mutações acidentais
-      } else {
-        reject(new Error('Funcionário não encontrado'));
-      }
-    }, 300);
-  });
+  try {
+    const employees = await apiService.getFuncionarios();
+    const employee = employees.find(e => e._id === id);
+    if (employee) {
+      return employee;
+    } else {
+      throw new Error('Funcionário não encontrado');
+    }
+  } catch (error) {
+    console.error('Error in getEmployee:', error);
+    throw error;
+  }
 };
 
-// Função para criar um novo funcionário
-export const createEmployee = async (employee: Omit<Employee, 'id'>): Promise<Employee> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const newId = `emp-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-      const newEmployee = {
-        ...employee,
-        id: newId
-      };
-      
-      // Adiciona o novo funcionário ao array
-      mockEmployees = [...mockEmployees, newEmployee];
-      
-      console.log('Funcionário criado:', newEmployee);
-      console.log('Total de funcionários:', mockEmployees.length);
-      
-      resolve({...newEmployee}); // Retorna uma cópia para evitar mutações acidentais
-    }, 500);
-  });
+/**
+ * Function to create a new employee
+ * @param employee Employee data without ID
+ * @returns Promise with created employee including ID
+ */
+export const createEmployee = async (employee: Omit<Employee, '_id'>): Promise<Employee> => {
+  try {
+    return await apiService.addFuncionario(employee);
+  } catch (error) {
+    console.error('Error in createEmployee:', error);
+    throw error;
+  }
 };
 
-// Função para atualizar um funcionário
+/**
+ * Function to update an existing employee
+ * @param id Employee ID
+ * @param employee Partial employee data to update
+ * @returns Promise with updated employee
+ */
 export const updateEmployee = async (id: string, employee: Partial<Employee>): Promise<Employee> => {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      const index = mockEmployees.findIndex(e => e.id === id);
-      if (index !== -1) {
-        const updatedEmployee = { ...mockEmployees[index], ...employee };
-        mockEmployees = [
-          ...mockEmployees.slice(0, index),
-          updatedEmployee,
-          ...mockEmployees.slice(index + 1)
-        ];
-        
-        console.log('Funcionário atualizado:', updatedEmployee);
-        console.log('Total de funcionários:', mockEmployees.length);
-        
-        resolve({...updatedEmployee}); // Retorna uma cópia para evitar mutações acidentais
-      } else {
-        reject(new Error('Funcionário não encontrado'));
-      }
-    }, 500);
-  });
+  try {
+    return await apiService.updateFuncionario(id, employee);
+  } catch (error) {
+    console.error('Error in updateEmployee:', error);
+    throw error;
+  }
 };
 
-// Função para excluir um funcionário
+/**
+ * Function to delete an employee
+ * @param id Employee ID
+ * @returns Promise with boolean indicating success
+ */
 export const deleteEmployee = async (id: string): Promise<boolean> => {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      const index = mockEmployees.findIndex(e => e.id === id);
-      if (index !== -1) {
-        console.log('Excluindo funcionário com ID:', id);
-        console.log('Total antes da exclusão:', mockEmployees.length);
-        
-        mockEmployees = [
-          ...mockEmployees.slice(0, index),
-          ...mockEmployees.slice(index + 1)
-        ];
-        
-        console.log('Total após exclusão:', mockEmployees.length);
-        resolve(true);
-      } else {
-        console.log('Funcionário não encontrado para exclusão:', id);
-        reject(new Error('Funcionário não encontrado'));
-      }
-    }, 500);
-  });
+  try {
+    await apiService.deleteFuncionario(id);
+    return true;
+  } catch (error) {
+    console.error('Error in deleteEmployee:', error);
+    throw error;
+  }
 };
-
-
-
