@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertCircleIcon, CheckCircleIcon, ClockIcon } from 'lucide-react';
+import { AlertCircleIcon, CheckCircleIcon, ClockIcon, RefreshCwIcon } from 'lucide-react';
 
 interface DashboardStatsProps {
   stats: {
@@ -7,6 +7,7 @@ interface DashboardStatsProps {
     completed: number;
     inProgress: number;
     pending: number;
+    remake: number;
   };
 }
 
@@ -38,6 +39,11 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ stats }) => {
       label: 'Pendentes',
       value: stats.pending || 0,
       icon: <AlertCircleIcon className="h-6 w-6 text-yellow-500" />,
+    },
+    {
+      label: 'Para Refazer',
+      value: stats.remake || 0,
+      icon: <RefreshCwIcon className="h-6 w-6 text-red-500" />,
     }
   ];
 

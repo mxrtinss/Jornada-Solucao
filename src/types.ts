@@ -67,6 +67,7 @@ export interface DashboardData {
     completed: number;
     inProgress: number;
     pending: number;
+    remake: number; // Adicionando a contagem de programas para refazer
   };
   activePrograms: Program[];
 }

@@ -1,7 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeftIcon, ClockIcon, PenToolIcon as ToolIcon, ClipboardCheckIcon, SaveIcon, MessageSquareIcon, Loader2Icon, Image as ImageIcon, WrenchIcon } from 'lucide-react';
-import { getProgram, completeProgram } from '../services/programService';
+import { 
+  ChevronLeftIcon, 
+  ClockIcon, 
+  PenToolIcon as ToolIcon, 
+  ClipboardCheckIcon, 
+  SaveIcon, 
+  MessageSquareIcon, 
+  Loader2Icon, 
+  Image as ImageIcon, 
+  WrenchIcon,
+  RefreshCwIcon,
+  Clock
+} from 'lucide-react';
+import { getProgram, completeProgram, updateProgramStatus } from '../services/programService';
 import { Program, Measurement, Tool } from '../types';
 import { Button } from '../components/ui/Button';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
@@ -33,6 +45,12 @@ const ProgramDetailPage: React.FC = () => {
 
   // Adicione este estado no início do componente
   const [measurementVerified, setMeasurementVerified] = useState(false);
+
+  // Adicione um novo estado para controlar o refazer programa
+  const [isRemaking, setIsRemaking] = useState(false);
+
+  // Adicione um novo estado para controlar o botão de retornar para "Em Andamento"
+  const [isReturningToProgress, setIsReturningToProgress] = useState(false);
 
   useEffect(() => {
     const loadProgram = async () => {
@@ -233,6 +251,84 @@ const ProgramDetailPage: React.FC = () => {
     } else {
       console.log("Não é possível verificar: campo vazio");
       showToast("Preencha o campo de verificação de medidas", "error");
+    }
+  };
+
+  // Adicione esta função para lidar com o refazer programa
+  const handleProgramRemake = async () => {
+    if (!id || isSubmitting || isRemaking) {
+      return;
+    }
+    
+    setIsRemaking(true);
+    
+    try {
+      // Atualizar o status no servidor primeiro
+      await updateProgramStatus(id, 'Refazer');
+      
+      // Reset dos estados
+      setMeasurements([]);
+      setProcessStartTime(null);
+      setProcessEndTime(null);
+      setMeasurementVerified(false);
+      setMeasurementNotes('');
+      
+      if (signatureRef.current) {
+        signatureRef.current.clear();
+      }
+      
+      // Atualizar o programa localmente
+      if (program) {
+        const updatedProgram = {
+          ...program,
+          status: 'Refazer',
+          measurements: [],
+          processStartTime: null,
+          processEndTime: null,
+          measurementVerification: '',
+          signature: null
+        };
+        
+        setProgram(updatedProgram);
+      }
+      
+      showToast('Programa marcado para refazer!', 'success');
+    } catch (error) {
+      console.error('Erro ao refazer programa:', error);
+      showToast('Erro ao refazer programa. Tente novamente.', 'error');
+    } finally {
+      setIsRemaking(false);
+    }
+  };
+
+  // Adicione esta função para lidar com o retorno para "Em Andamento"
+  const handleReturnToProgress = async () => {
+    if (!id || isSubmitting || isRemaking || isReturningToProgress) {
+      return;
+    }
+    
+    setIsReturningToProgress(true);
+    
+    try {
+      // Atualizar o status no servidor
+      await updateProgramStatus(id, 'Em Andamento');
+      
+      // Atualizar o programa localmente
+      if (program) {
+        const updatedProgram = {
+          ...program,
+          status: 'Em Andamento'
+        };
+        
+        setProgram(updatedProgram);
+      }
+      
+      showToast('Programa retornado para Em Andamento!', 'success');
+    } catch (error) {
+      console.error('Erro ao retornar programa para Em Andamento:', error);
+      showToast('Erro ao atualizar status do programa. Tente novamente.', 'error');
+    } finally {
+      setIsReturningToProgress(false);
     }
   };
 
@@ -475,29 +571,81 @@ const ProgramDetailPage: React.FC = () => {
               <DigitalSignature ref={signatureRef} onChange={handleSignatureChange} />
             </div>
 
-            {/* Submit Button */}
+            {/* Submit Buttons */}
             <div className="bg-white rounded-lg shadow-md p-6">
-              <Button
-                onClick={() => {
-                  console.log("Botão Concluir Programa clicado");
-                  handleProgramComplete();
-                }}
-                disabled={isSubmitting}
-                variant="primary"
-                className="w-full flex items-center justify-center"
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2Icon className="h-5 w-5 mr-2 animate-spin" />
-                    Salvando...
-                  </>
-                ) : (
-                  <>
-                    <SaveIcon className="h-5 w-5 mr-2" />
-                    Concluir Programa
-                  </>
+              <div className="flex flex-col sm:flex-row gap-3">
+                {/* Botão para retornar para Em Andamento (visível apenas se o status for "Refazer") */}
+                {program.status === 'Refazer' && (
+                  <Button
+                    onClick={() => {
+                      console.log("Botão Retornar para Em Andamento clicado");
+                      handleReturnToProgress();
+                    }}
+                    disabled={isSubmitting || isRemaking || isReturningToProgress}
+                    variant="info"
+                    className="flex-1 flex items-center justify-center"
+                    size="sm"
+                  >
+                    {isReturningToProgress ? (
+                      <>
+                        <Loader2Icon className="h-4 w-4 mr-1 animate-spin" />
+                        Atualizando...
+                      </>
+                    ) : (
+                      <>
+                        <Clock className="h-4 w-4 mr-1" />
+                        Em Andamento
+                      </>
+                    )}
+                  </Button>
                 )}
-              </Button>
+                
+                <Button
+                  onClick={() => {
+                    console.log("Botão Refazer Programa clicado");
+                    handleProgramRemake();
+                  }}
+                  disabled={isSubmitting || isRemaking || isReturningToProgress}
+                  variant="secondary"
+                  className="flex-1 flex items-center justify-center"
+                  size="sm"
+                >
+                  {isRemaking ? (
+                    <>
+                      <Loader2Icon className="h-4 w-4 mr-1 animate-spin" />
+                      Reiniciando...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCwIcon className="h-4 w-4 mr-1" />
+                      Refazer
+                    </>
+                  )}
+                </Button>
+                
+                <Button
+                  onClick={() => {
+                    console.log("Botão Concluir Programa clicado");
+                    handleProgramComplete();
+                  }}
+                  disabled={isSubmitting || isRemaking || isReturningToProgress}
+                  variant="primary"
+                  className="flex-1 flex items-center justify-center"
+                  size="sm"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2Icon className="h-4 w-4 mr-1 animate-spin" />
+                      Salvando...
+                    </>
+                  ) : (
+                    <>
+                      <SaveIcon className="h-4 w-4 mr-1" />
+                      Concluir
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -541,6 +689,7 @@ const ProgramDetailPage: React.FC = () => {
 };
 
 export default ProgramDetailPage;
+
 
 
 

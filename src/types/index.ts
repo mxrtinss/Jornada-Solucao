@@ -22,4 +22,15 @@ export interface Operator {
   ativo?: boolean;
 }
 
+// Tipo para programa
+export interface Program {
+  id: string;
+  programId: string;
+  programName?: string;
+  material: string;
+  reference?: string;
+  machine?: string;
+  status: 'Pendente' | 'Em Andamento' | 'Concluído' | 'Refazer';
+  // Outros campos...
+}
 

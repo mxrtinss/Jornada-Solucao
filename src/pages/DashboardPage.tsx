@@ -29,6 +29,27 @@ const DashboardPage: React.FC = () => {
     navigate(`/programs/${programId}`);
   };
 
+  const sortPrograms = (programs) => {
+    if (!programs) return [];
+    
+    return [...programs].sort((a, b) => {
+      // Ordem de prioridade: Em Andamento > Pendente > Refazer
+      const statusOrder = {
+        'Em Andamento': 1,
+        'Pendente': 2,
+        'Refazer': 3,
+        'Concluído': 4
+      };
+      
+      // Comparar por status primeiro
+      const statusComparison = statusOrder[a.status] - statusOrder[b.status];
+      if (statusComparison !== 0) return statusComparison;
+      
+      // Se o status for o mesmo, ordenar por ID do programa
+      return a.programId.localeCompare(b.programId);
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full min-h-[50vh]">
@@ -55,7 +76,7 @@ const DashboardPage: React.FC = () => {
         
         {dashboardData?.activePrograms && dashboardData.activePrograms.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {dashboardData.activePrograms.map((program) => (
+            {sortPrograms(dashboardData.activePrograms).map((program) => (
               <ProgramCard 
                 key={program.id}
                 program={program}
