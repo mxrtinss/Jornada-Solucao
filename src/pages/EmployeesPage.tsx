@@ -6,12 +6,14 @@ import LoadingState from '../components/common/LoadingState';
 import ErrorState from '../components/common/ErrorState';
 import EmployeeForm from '../components/employees/EmployeeForm';
 import { apiService } from '../services/apiService';
+import PasswordProtection from '../components/auth/PasswordProtection';
 
 function EmployeesPage() {
   const { data: employees, loading, error, refreshData } = useMongoCollection<Employee>('funcionarios');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | undefined>(undefined);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // Filter employees based on search term
   const filteredEmployees = employees.filter(employee => 
@@ -86,6 +88,10 @@ function EmployeesPage() {
     setIsFormOpen(true);
   };
 
+  if (!isAuthenticated) {
+    return <PasswordProtection onAuthenticate={setIsAuthenticated} />;
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
@@ -102,6 +108,12 @@ function EmployeesPage() {
             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
           >
             Atualizar
+          </button>
+          <button 
+            onClick={() => setIsAuthenticated(false)}
+            className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+          >
+            Sair
           </button>
         </div>
       </div>
