@@ -110,6 +110,60 @@ app.get('/api/test', (req, res) => {
   res.json({ message: 'API is working!' });
 });
 
+// Update funcionario
+app.put('/api/funcionarios/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+    
+    const database = client.db('Simoldes');
+    const collection = database.collection('funcionarios');
+    
+    // Convert string id to ObjectId
+    const objectId = new ObjectId(id);
+    
+    const result = await collection.updateOne(
+      { _id: objectId },
+      { $set: updateData }
+    );
+    
+    if (result.matchedCount === 0) {
+      res.status(404).json({ error: 'Funcionário não encontrado' });
+      return;
+    }
+    
+    res.json({ success: true, message: 'Funcionário atualizado com sucesso' });
+  } catch (error) {
+    console.error('Error updating funcionario:', error);
+    res.status(500).json({ error: 'Erro ao atualizar funcionário' });
+  }
+});
+
+// Delete funcionario
+app.delete('/api/funcionarios/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const database = client.db('Simoldes');
+    const collection = database.collection('funcionarios');
+    
+    // Convert string id to ObjectId
+    const objectId = new ObjectId(id);
+    
+    const result = await collection.deleteOne({ _id: objectId });
+    
+    if (result.deletedCount === 0) {
+      res.status(404).json({ error: 'Funcionário não encontrado' });
+      return;
+    }
+    
+    res.json({ success: true, message: 'Funcionário excluído com sucesso' });
+  } catch (error) {
+    console.error('Error deleting funcionario:', error);
+    res.status(500).json({ error: 'Erro ao excluir funcionário' });
+  }
+});
+
 // Start the server
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);

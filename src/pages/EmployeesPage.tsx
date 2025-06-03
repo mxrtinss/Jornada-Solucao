@@ -4,10 +4,14 @@ import { useMongoCollection } from '../hooks/useMongoCollection';
 import { Employee } from '../services/apiService';
 import LoadingState from '../components/common/LoadingState';
 import ErrorState from '../components/common/ErrorState';
+import EmployeeForm from '../components/employees/EmployeeForm';
+import { apiService } from '../services/apiService';
 
 function EmployeesPage() {
   const { data: employees, loading, error, refreshData } = useMongoCollection<Employee>('funcionarios');
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   // Filter employees based on search term
   const filteredEmployees = employees.filter(employee => 
@@ -17,16 +21,57 @@ function EmployeesPage() {
     (employee.departamento && employee.departamento.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
+  const handleEdit = (employee: Employee) => {
+    setSelectedEmployee(employee);
+    setIsFormOpen(true);
+  };
+
+  const handleDelete = async (employee: Employee) => {
+    if (!employee._id) return;
+    
+    if (window.confirm(`Tem certeza que deseja excluir o funcionário ${employee.nome}?`)) {
+      try {
+        await apiService.deleteFuncionario(employee._id);
+        refreshData();
+      } catch (error) {
+        console.error('Error deleting employee:', error);
+        alert('Erro ao excluir funcionário');
+      }
+    }
+  };
+
+  const handleFormSubmit = async (formData: Partial<Employee>) => {
+    try {
+      if (selectedEmployee?._id) {
+        // Update existing employee
+        await apiService.updateFuncionario(selectedEmployee._id, formData);
+      }
+      refreshData();
+      setIsFormOpen(false);
+      setSelectedEmployee(null);
+    } catch (error) {
+      console.error('Error saving employee:', error);
+      alert('Erro ao salvar funcionário');
+    }
+  };
+
+  const handleFormCancel = () => {
+    setIsFormOpen(false);
+    setSelectedEmployee(null);
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Funcionários</h1>
-        <button 
-          onClick={refreshData}
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-        >
-          Atualizar
-        </button>
+        <div className="flex gap-4">
+          <button 
+            onClick={refreshData}
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          >
+            Atualizar
+          </button>
+        </div>
       </div>
 
       {/* Search bar */}
@@ -59,12 +104,13 @@ function EmployeesPage() {
                 <th className="py-2 px-4 border-b">Email</th>
                 <th className="py-2 px-4 border-b">Telefone</th>
                 <th className="py-2 px-4 border-b">Status</th>
+                <th className="py-2 px-4 border-b">Ações</th>
               </tr>
             </thead>
             <tbody>
               {filteredEmployees.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-4">
+                  <td colSpan={8} className="text-center py-4">
                     Nenhum funcionário encontrado
                   </td>
                 </tr>
@@ -82,11 +128,40 @@ function EmployeesPage() {
                         {employee.ativo ? 'Ativo' : 'Inativo'}
                       </span>
                     </td>
+                    <td className="py-2 px-4 border-b">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleEdit(employee)}
+                          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded text-sm"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => handleDelete(employee)}
+                          className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded text-sm"
+                        >
+                          Excluir
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))
               )}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Employee Form Modal */}
+      {isFormOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full">
+            <EmployeeForm
+              employee={selectedEmployee}
+              onSubmit={handleFormSubmit}
+              onCancel={handleFormCancel}
+            />
+          </div>
         </div>
       )}
     </div>

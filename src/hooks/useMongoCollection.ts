@@ -11,6 +11,30 @@ export function useMongoCollection<T>(collectionName: string) {
   // Function to manually refresh data
   const refreshData = () => setRefreshTrigger(prev => prev + 1);
 
+  // Function to update an item
+  const updateItem = async (id: string, updateData: Partial<T>) => {
+    try {
+      if (collectionName === 'funcionarios') {
+        await apiService.updateFuncionario(id, updateData);
+        refreshData();
+      }
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  // Function to delete an item
+  const deleteItem = async (id: string) => {
+    try {
+      if (collectionName === 'funcionarios') {
+        await apiService.deleteFuncionario(id);
+        refreshData();
+      }
+    } catch (error) {
+      throw error;
+    }
+  };
+
   useEffect(() => {
     let isMounted = true;
     
@@ -52,7 +76,7 @@ export function useMongoCollection<T>(collectionName: string) {
     };
   }, [collectionName, refreshTrigger]);
 
-  return { data, loading, error, refreshData };
+  return { data, loading, error, refreshData, updateItem, deleteItem };
 }
 
 

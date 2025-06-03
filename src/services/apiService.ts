@@ -38,6 +38,44 @@ export const apiService = {
     }
   },
 
+  // Update a funcionario
+  async updateFuncionario(id: string, data: Partial<Employee>): Promise<void> {
+    try {
+      const response = await fetch(`${API_URL}/funcionarios/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error updating funcionario');
+      }
+    } catch (error) {
+      console.error('Error updating funcionario:', error);
+      throw error;
+    }
+  },
+
+  // Delete a funcionario
+  async deleteFuncionario(id: string): Promise<void> {
+    try {
+      const response = await fetch(`${API_URL}/funcionarios/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error deleting funcionario');
+      }
+    } catch (error) {
+      console.error('Error deleting funcionario:', error);
+      throw error;
+    }
+  },
+
   // Other methods...
 };
 
