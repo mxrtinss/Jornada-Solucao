@@ -10,7 +10,7 @@ import { apiService } from '../services/apiService';
 function EmployeesPage() {
   const { data: employees, loading, error, refreshData } = useMongoCollection<Employee>('funcionarios');
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | undefined>(undefined);
   const [isFormOpen, setIsFormOpen] = useState(false);
 
   // Filter employees based on search term
@@ -45,19 +45,45 @@ function EmployeesPage() {
       if (selectedEmployee?._id) {
         // Update existing employee
         await apiService.updateFuncionario(selectedEmployee._id, formData);
+      } else {
+        // Create new employee - ensure required fields are present
+        if (!formData.matricula || !formData.nome) {
+          alert('Matrícula e nome são obrigatórios');
+          return;
+        }
+        
+        // Prepare the new employee data with default values
+        const newEmployee = {
+          matricula: formData.matricula,
+          nome: formData.nome,
+          cargo: formData.cargo || '',
+          departamento: formData.departamento || '',
+          email: formData.email || '',
+          telefone: formData.telefone || '',
+          dataAdmissao: formData.dataAdmissao || new Date().toISOString().split('T')[0],
+          ativo: formData.ativo !== undefined ? formData.ativo : true
+        };
+
+        console.log('Creating new employee:', newEmployee);
+        await apiService.addFuncionario(newEmployee);
       }
       refreshData();
       setIsFormOpen(false);
-      setSelectedEmployee(null);
+      setSelectedEmployee(undefined);
     } catch (error) {
       console.error('Error saving employee:', error);
-      alert('Erro ao salvar funcionário');
+      alert(error instanceof Error ? error.message : 'Erro ao salvar funcionário');
     }
   };
 
   const handleFormCancel = () => {
     setIsFormOpen(false);
-    setSelectedEmployee(null);
+    setSelectedEmployee(undefined);
+  };
+
+  const handleAdd = () => {
+    setSelectedEmployee(undefined);
+    setIsFormOpen(true);
   };
 
   return (
@@ -65,6 +91,12 @@ function EmployeesPage() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Funcionários</h1>
         <div className="flex gap-4">
+          <button 
+            onClick={handleAdd}
+            className="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded"
+          >
+            Adicionar
+          </button>
           <button 
             onClick={refreshData}
             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"

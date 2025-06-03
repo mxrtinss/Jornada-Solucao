@@ -10,8 +10,7 @@ export interface User {
 
 // Tipo para funcionário
 export interface Operator {
-  _id?: string;
-  id?: string;
+  _id?: string;  // Optional for new employees, required for existing ones
   matricula: string;
   nome: string;
   cargo?: string;

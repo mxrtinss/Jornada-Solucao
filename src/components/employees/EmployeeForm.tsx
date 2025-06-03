@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Employee } from '../../types/index';
+import { Operator as Employee } from '../../types/index';
 import { X } from 'lucide-react';
 
 interface EmployeeFormProps {
   employee?: Employee;
-  onSubmit: (employee: Omit<Employee, 'id'>) => void;
+  onSubmit: (employee: Omit<Employee, '_id'>) => void;
   onCancel: () => void;
 }
 
@@ -13,7 +13,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
   onSubmit, 
   onCancel 
 }) => {
-  const [formData, setFormData] = useState<Omit<Employee, 'id'>>({
+  const [formData, setFormData] = useState<Omit<Employee, '_id'>>({
     matricula: '',
     nome: '',
     cargo: '',
@@ -27,7 +27,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 
   useEffect(() => {
     if (employee) {
-      const { id, ...rest } = employee;
+      const { _id, ...rest } = employee;
       setFormData(rest);
     }
   }, [employee]);

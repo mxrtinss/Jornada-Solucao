@@ -1,5 +1,5 @@
 // API service to communicate with your backend
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+const API_URL = 'http://localhost:3001/api';
 
 export interface Operator {
   _id: string;
@@ -34,6 +34,38 @@ export const apiService = {
       return data;
     } catch (error) {
       console.error('Error fetching funcionarios:', error);
+      throw error;
+    }
+  },
+
+  // Add a new funcionario
+  async addFuncionario(data: Omit<Employee, '_id'>): Promise<Employee> {
+    try {
+      console.log('Sending request to create funcionario:', data);
+      const response = await fetch(`${API_URL}/funcionarios`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Server response:', errorText);
+        try {
+          const errorData = JSON.parse(errorText);
+          throw new Error(errorData.error || 'Erro ao criar funcionário');
+        } catch (e) {
+          throw new Error(`Erro ao criar funcionário: ${errorText}`);
+        }
+      }
+
+      const result = await response.json();
+      console.log('Successfully created funcionario:', result);
+      return result;
+    } catch (error) {
+      console.error('Error in addFuncionario:', error);
       throw error;
     }
   },

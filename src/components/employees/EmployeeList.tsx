@@ -1,5 +1,5 @@
 import React from 'react';
-import { Employee } from '../../types/index';
+import { Operator as Employee } from '../../types/index';
 import { Edit2, Trash2 } from 'lucide-react';
 
 interface EmployeeListProps {
@@ -39,9 +39,9 @@ const EmployeeList: React.FC<EmployeeListProps> = ({
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody>
             {employees.map((employee) => (
-              <tr key={employee.id} className="hover:bg-gray-50">
+              <tr key={employee._id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                   {employee.matricula}
                 </td>
@@ -66,14 +66,14 @@ const EmployeeList: React.FC<EmployeeListProps> = ({
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex justify-end space-x-2">
                     <button
-                      onClick={() => onEdit(employee.id)}
+                      onClick={() => employee._id && onEdit(employee._id)}
                       className="text-teal-600 hover:text-teal-900"
                       title="Editar"
                     >
                       <Edit2 className="h-5 w-5" />
                     </button>
                     <button
-                      onClick={() => onDelete(employee.id)}
+                      onClick={() => employee._id && onDelete(employee._id)}
                       className="text-red-600 hover:text-red-900"
                       title="Excluir"
                     >

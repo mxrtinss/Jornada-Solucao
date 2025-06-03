@@ -21,7 +21,7 @@ const client = new MongoClient(uri, {
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json()); // Add JSON body parser
 
 // Add logging middleware
 app.use((req, res, next) => {
@@ -108,6 +108,47 @@ app.get('/api/operators', async (req, res) => {
 // Add a test route
 app.get('/api/test', (req, res) => {
   res.json({ message: 'API is working!' });
+});
+
+// Create funcionario
+app.post('/api/funcionarios', async (req, res) => {
+  try {
+    const newFuncionario = req.body;
+    console.log('Received request to create funcionario:', newFuncionario);
+
+    // Validate required fields
+    if (!newFuncionario.matricula || !newFuncionario.nome) {
+      console.error('Missing required fields');
+      res.status(400).json({ error: 'Matrícula e nome são obrigatórios' });
+      return;
+    }
+    
+    const database = client.db('Simoldes');
+    const collection = database.collection('funcionarios');
+    
+    // Check if matricula already exists
+    const existingFuncionario = await collection.findOne({ matricula: newFuncionario.matricula });
+    if (existingFuncionario) {
+      console.error('Matricula already exists:', newFuncionario.matricula);
+      res.status(400).json({ error: 'Já existe um funcionário com esta matrícula' });
+      return;
+    }
+    
+    const result = await collection.insertOne(newFuncionario);
+    
+    if (!result.insertedId) {
+      console.error('Failed to insert funcionario');
+      res.status(500).json({ error: 'Erro ao criar funcionário' });
+      return;
+    }
+    
+    const createdFuncionario = { ...newFuncionario, _id: result.insertedId };
+    console.log('Successfully created funcionario:', createdFuncionario);
+    res.status(201).json(createdFuncionario);
+  } catch (error) {
+    console.error('Error creating funcionario:', error);
+    res.status(500).json({ error: 'Erro ao criar funcionário: ' + error.message });
+  }
 });
 
 // Update funcionario
