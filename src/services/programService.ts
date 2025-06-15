@@ -8,6 +8,14 @@ const mockPrograms: Program[] = [
     reference: 'EM Z: 20,0',
     machine: 'F1400',
     status: 'Em Andamento',
+    operators: [
+      {
+        id: 'op1',
+        matricula: '12345',
+        nome: 'João Silva',
+        senha: '$2a$10$CwTycUXWue0Thq9StjUM0uJ8iQ6Qw8Qw8Qw8Qw8Qw8Qw8Qw8Qw8QW' // bcrypt hash for 'senha123'
+      }
+    ],
     tools: [
       {
         id: '1',

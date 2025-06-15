@@ -205,6 +205,32 @@ app.delete('/api/funcionarios/:id', async (req, res) => {
   }
 });
 
+// Complete a program
+app.post('/api/programs/:id/complete', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { completedAt } = req.body;
+
+    const database = client.db('Simoldes');
+    const collection = database.collection('programs');
+
+    // Update the program status to 'completed' and set completedAt
+    const result = await collection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { status: 'completed', completedAt: completedAt || new Date().toISOString() } }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: 'Programa não encontrado' });
+    }
+
+    res.json({ success: true, message: 'Programa concluído com sucesso' });
+  } catch (error) {
+    console.error('Error completing program:', error);
+    res.status(500).json({ error: 'Erro ao concluir programa' });
+  }
+});
+
 // Start the server
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);

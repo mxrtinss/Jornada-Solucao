@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   ChevronLeftIcon, 
@@ -11,10 +11,13 @@ import {
   Image as ImageIcon, 
   WrenchIcon,
   RefreshCwIcon,
-  Clock
+  Clock,
+  ArrowLeftIcon,
+  CheckCircleIcon,
+  XCircleIcon
 } from 'lucide-react';
 import { getProgram, completeProgram, updateProgramStatus } from '../services/programService';
-import { Program, Measurement, Tool } from '../types';
+import { Program, Measurement, Tool, Employee } from '../types';
 import { Button } from '../components/ui/Button';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import TimeTracker from '../components/programs/TimeTracker';
@@ -29,6 +32,9 @@ import { hfs } from '@humanfs/node';
 import RecentCompletions from '../components/dashboard/RecentCompletions';
 import ToolDetails from '../components/programs/ToolDetails';
 import OperatorSelector from '../components/programs/OperatorSelector';
+import EmployeePasswordVerification from '../components/programs/EmployeePasswordVerification';
+import { InputField } from '../components/ui/InputField';
+import { verifyPassword } from '../utils/passwordUtils';
 
 const ProgramDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -52,6 +58,11 @@ const ProgramDetailPage: React.FC = () => {
   // Adicione um novo estado para controlar o botão de retornar para "Em Andamento"
   const [isReturningToProgress, setIsReturningToProgress] = useState(false);
 
+  const [showPasswordVerification, setShowPasswordVerification] = useState(false);
+  const [selectedOperatorForVerification, setSelectedOperatorForVerification] = useState<Employee | null>(null);
+  const [verificationStep, setVerificationStep] = useState(1);
+  const [totalVerificationSteps, setTotalVerificationSteps] = useState(0);
+
   useEffect(() => {
     const loadProgram = async () => {
       try {
@@ -66,6 +77,7 @@ const ProgramDetailPage: React.FC = () => {
           console.log('Notas de medição carregadas:', data.measurementNotes);
           setMeasurementNotes(data.measurementNotes);
         }
+        setTotalVerificationSteps(Array.isArray(data.operators) ? data.operators.length : 0);
       } catch (error) {
         console.error('Erro ao carregar programa:', error);
         setError(error instanceof Error ? error.message : 'Erro ao carregar programa');
@@ -196,49 +208,53 @@ const ProgramDetailPage: React.FC = () => {
       return;
     }
 
-    console.log("Todas as validações passaram, enviando dados...");
-    // Se chegou aqui, todas as validações passaram
-    setIsSubmitting(true);
+    // Verificar se os operadores têm senha cadastrada
+    const operatorsWithoutPassword = selectedOperators?.filter(op => !op.senha);
+    if (operatorsWithoutPassword && operatorsWithoutPassword.length > 0) {
+      showToast('Alguns operadores não possuem senha cadastrada. Por favor, cadastre as senhas antes de concluir o programa.', 'error');
+      return;
+    }
 
-    try {
-      const signatureImage = signatureRef.current?.toDataURL();
-      
-      // Preparar dados para envio
-      const programData = {
-        id,
-        measurements,
-        timeTracking: {
-          startTime: processStartTime,
-          endTime: processEndTime
-        },
-        operators: selectedOperators,
-        signature: signatureImage
-      };
-      
-      console.log('Enviando dados do programa:', programData);
-      
-      // Simulação de envio para o servidor
-      await completeProgram(id, {
-        processStartTime,
-        processEndTime,
-        measurements,
-        signature: signatureImage,
-        comments: ''
-      });
-      
-      console.log("Programa concluído com sucesso!");
-      showToast('Programa concluído com sucesso! Redirecionando em 5 segundos...', 'success');
-      setShowCompletion(true);
-      
-      // Adicionar temporizador para redirecionar após 5 segundos
-      setTimeout(() => {
-        navigate('/', { replace: true });
-      }, 5000);
-    } catch (error) {
-      console.error('Erro ao concluir programa:', error);
-      showToast('Erro ao concluir programa. Tente novamente.', 'error');
-    } finally {
-      setIsSubmitting(false);
+    // Iniciar verificação de senha com o primeiro operador
+    if (selectedOperators && selectedOperators.length > 0) {
+      setVerificationStep(1);
+      setSelectedOperatorForVerification(selectedOperators[0]);
+      setShowPasswordVerification(true);
+    }
+  };
+
+  const handlePasswordVerification = async (success: boolean) => {
+    console.log('Password verification result:', success);
+    if (!success || !program || !selectedOperatorForVerification) {
+      setShowPasswordVerification(false);
+      setSelectedOperatorForVerification(null);
+      setVerificationStep(1);
+      return;
+    }
+
+    // If there are more operators to verify
+    if (verificationStep < totalVerificationSteps) {
+      const nextOperator = program.operators[verificationStep];
+      setSelectedOperatorForVerification(nextOperator);
+      setVerificationStep(verificationStep + 1);
+    } else {
+      // All operators verified, complete the program
+      try {
+        console.log('All operators verified, completing program using mock service...');
+        await completeProgram(program.id, {
+          processStartTime,
+          processEndTime,
+          measurements,
+          signature: signature || '',
+          comments,
+        });
+        navigate('/programs');
+      } catch (err) {
+        setError('Erro ao concluir programa');
+        setShowPasswordVerification(false);
+        setSelectedOperatorForVerification(null);
+        setVerificationStep(1);
+      }
     }
   };
 
@@ -356,12 +372,6 @@ const ProgramDetailPage: React.FC = () => {
       </div>
     );
   }
-
-  // Remover esta função de teste
-  // const testToast = () => {
-  //   console.log("Testando toast");
-  //   showToast("Teste de mensagem toast", "info");
-  // };
 
   return (
     <>
@@ -675,15 +685,19 @@ const ProgramDetailPage: React.FC = () => {
         />
       )}
 
-      {/* Remover o botão de teste de toast abaixo */}
-      {/* 
-      <button 
-        onClick={testToast}
-        className="px-4 py-2 bg-blue-500 text-white rounded-md mb-4"
-      >
-        Testar Toast
-      </button>
-      */}
+      {showPasswordVerification && selectedOperatorForVerification && (
+        <EmployeePasswordVerification
+          employee={selectedOperatorForVerification}
+          onVerify={handlePasswordVerification}
+          onCancel={() => {
+            setShowPasswordVerification(false);
+            setSelectedOperatorForVerification(null);
+            setVerificationStep(1);
+          }}
+          step={verificationStep}
+          totalSteps={totalVerificationSteps}
+        />
+      )}
     </>
   );
 };
