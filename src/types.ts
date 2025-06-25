@@ -39,6 +39,20 @@ export interface Tool {
   parameters: ToolParameters;
 }
 
+// Tipo para funcionário/operador
+export interface Operator {
+  _id?: string;  // Optional for new employees, required for existing ones
+  matricula: string;
+  nome: string;
+  cargo?: string;
+  departamento?: string;
+  email?: string;
+  telefone?: string;
+  dataAdmissao?: string;
+  ativo?: boolean;
+  senha?: string; // Senha para autenticação individual
+}
+
 export interface Program {
   id: string;
   programId: string;

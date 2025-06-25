@@ -134,6 +134,11 @@ app.post('/api/funcionarios', async (req, res) => {
       return;
     }
     
+    // Ensure senha field is included (optional)
+    if (!newFuncionario.senha) {
+      newFuncionario.senha = ''; // Default empty password
+    }
+    
     const result = await collection.insertOne(newFuncionario);
     
     if (!result.insertedId) {
@@ -162,6 +167,12 @@ app.put('/api/funcionarios/:id', async (req, res) => {
     
     // Convert string id to ObjectId
     const objectId = new ObjectId(id);
+    
+    // Ensure senha field is preserved if not provided
+    if (updateData.senha === undefined) {
+      // Don't update senha if not provided
+      delete updateData.senha;
+    }
     
     const result = await collection.updateOne(
       { _id: objectId },
@@ -205,8 +216,56 @@ app.delete('/api/funcionarios/:id', async (req, res) => {
   }
 });
 
+// Verify operator password
+app.post('/api/operators/verify-password', async (req, res) => {
+  try {
+    const { matricula, senha } = req.body;
+    
+    if (!matricula || !senha) {
+      res.status(400).json({ error: 'Matrícula e senha são obrigatórios' });
+      return;
+    }
+    
+    const database = client.db('Simoldes');
+    const collection = database.collection('funcionarios');
+    
+    const funcionario = await collection.findOne({ matricula: matricula });
+    
+    if (!funcionario) {
+      res.status(404).json({ error: 'Funcionário não encontrado' });
+      return;
+    }
+    
+    // Verificar se a senha está correta
+    if (funcionario.senha && funcionario.senha !== senha) {
+      res.status(401).json({ error: 'Senha incorreta' });
+      return;
+    }
+    
+    // Se não há senha definida, aceitar qualquer senha para facilitar testes
+    if (!funcionario.senha) {
+      console.log('Funcionário sem senha definida, aceitando qualquer senha');
+    }
+    
+    res.json({ 
+      success: true, 
+      message: 'Senha verificada com sucesso',
+      funcionario: {
+        _id: funcionario._id,
+        matricula: funcionario.matricula,
+        nome: funcionario.nome,
+        cargo: funcionario.cargo,
+        departamento: funcionario.departamento
+      }
+    });
+  } catch (error) {
+    console.error('Error verifying password:', error);
+    res.status(500).json({ error: 'Erro ao verificar senha' });
+  }
+});
+
 // Start the server
 app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
+  console.log(`Server running on port ${port}`);
 });
 

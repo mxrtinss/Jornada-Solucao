@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { User, Plus, X } from 'lucide-react';
 import { useMongoCollection } from '../../hooks/useMongoCollection';
 import { Operator } from '../../types';
+import OperatorAuthModal from './OperatorAuthModal';
 
 // Type for the props of the component
 interface OperatorSelectorProps {
@@ -18,6 +19,10 @@ export const OperatorSelector: React.FC<OperatorSelectorProps> = ({
   
   // State for selected operators
   const [operators, setOperators] = useState<Operator[]>(selectedOperators);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [currentOperatorIndex, setCurrentOperatorIndex] = useState<number | null>(null);
+  const [authenticatedOperators, setAuthenticatedOperators] = useState<string[]>([]); // lista de matrículas autenticadas
+  const [failedAuthOperators, setFailedAuthOperators] = useState<string[]>([]); // lista de matrículas com falha na autenticação
   
   // Effect to notify parent component when operators change
   useEffect(() => {
@@ -39,21 +44,38 @@ export const OperatorSelector: React.FC<OperatorSelectorProps> = ({
   // Function to update an operator's matricula
   const updateOperatorMatricula = (index: number, matricula: string) => {
     const updatedOperators = [...operators];
-    updatedOperators[index].matricula = matricula;
-    
-    // Find the operator with the matching matricula
-    const foundOperator = availableOperators?.find(op => op.matricula === matricula);
-    if (foundOperator) {
-      updatedOperators[index] = {
-        ...foundOperator,
-        // Ensure we use MongoDB _id as our id
-        id: foundOperator._id
-      };
-    } else {
-      updatedOperators[index].nome = '';
-    }
-    
+    updatedOperators[index] = {
+      ...updatedOperators[index],
+      matricula,
+      nome: availableOperators?.find(op => op.matricula === matricula)?.nome || ''
+    };
     setOperators(updatedOperators);
+    
+    // Se uma matrícula foi selecionada E (o operador ainda não foi autenticado OU falhou na autenticação), abrir modal
+    if (matricula && (!authenticatedOperators.includes(matricula) || failedAuthOperators.includes(matricula))) {
+      setCurrentOperatorIndex(index);
+      setShowAuthModal(true);
+    }
+  };
+
+  // Função para reautenticar um operador (quando clica na matrícula de um que falhou)
+  const handleReauthenticate = (index: number) => {
+    if (operators[index].matricula) {
+      setCurrentOperatorIndex(index);
+      setShowAuthModal(true);
+    }
+  };
+
+  // Função chamada após autenticação
+  const handleAuthSuccess = (success: boolean) => {
+    if (success && currentOperatorIndex !== null) {
+      setAuthenticatedOperators(prev => [...prev, operators[currentOperatorIndex].matricula]);
+      setFailedAuthOperators(prev => prev.filter(m => m !== operators[currentOperatorIndex].matricula));
+    } else if (!success && currentOperatorIndex !== null) {
+      setFailedAuthOperators(prev => [...prev, operators[currentOperatorIndex].matricula]);
+    }
+    setShowAuthModal(false);
+    setCurrentOperatorIndex(null);
   };
 
   // Function to validate operators
@@ -93,7 +115,8 @@ export const OperatorSelector: React.FC<OperatorSelectorProps> = ({
           key={operator._id || `temp-${index}`} 
           className={`flex flex-col space-y-2 p-3 border rounded-lg bg-white ${
             operator.matricula ? 
-              (isOperatorValid(operator) ? 'border-green-200' : 'border-red-200') : 
+              (authenticatedOperators.includes(operator.matricula) ? 'border-green-200' : 
+               failedAuthOperators.includes(operator.matricula) ? 'border-red-200' : 'border-yellow-200') : 
               'border-gray-200'
           }`}
         >
@@ -118,7 +141,7 @@ export const OperatorSelector: React.FC<OperatorSelectorProps> = ({
               value={operator.matricula}
               onChange={(e) => updateOperatorMatricula(index, e.target.value)}
               className={`w-full p-2 border rounded-md focus:ring-teal-500 focus:border-teal-500 ${
-                operator.matricula && !isOperatorValid(operator) ? 'border-red-300' : 'border-gray-300'
+                operator.matricula && !authenticatedOperators.includes(operator.matricula) ? 'border-red-300' : 'border-gray-300'
               }`}
             >
               <option value="">Selecione uma matrícula</option>
@@ -143,6 +166,25 @@ export const OperatorSelector: React.FC<OperatorSelectorProps> = ({
                 Matrícula inválida ou não encontrada
               </div>
             )}
+            
+            {/* Indicação de autenticado */}
+            {operator.matricula && authenticatedOperators.includes(operator.matricula) && (
+              <div className="text-xs text-green-600">✅ Operador autenticado</div>
+            )}
+            
+            {/* Aviso de senha incorreta com opção de tentar novamente */}
+            {operator.matricula && failedAuthOperators.includes(operator.matricula) && (
+              <div className="text-xs text-red-600 bg-red-50 p-2 rounded-md border border-red-200">
+                ❌ Senha incorreta. 
+                <button 
+                  type="button"
+                  onClick={() => handleReauthenticate(index)}
+                  className="ml-1 underline hover:no-underline font-medium"
+                >
+                  Clique aqui para tentar novamente
+                </button>
+              </div>
+            )}
           </div>
         </div>
       ))}
@@ -155,6 +197,15 @@ export const OperatorSelector: React.FC<OperatorSelectorProps> = ({
         <Plus className="h-4 w-4 mr-1" />
         Adicionar Operador
       </button>
+      {/* Modal de autenticação de senha */}
+      {showAuthModal && currentOperatorIndex !== null && (
+        <OperatorAuthModal
+          operator={operators[currentOperatorIndex]}
+          onAuthenticate={handleAuthSuccess}
+          onCancel={() => { setShowAuthModal(false); setCurrentOperatorIndex(null); }}
+          isVisible={showAuthModal}
+        />
+      )}
     </div>
   );
 };

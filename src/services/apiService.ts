@@ -96,6 +96,9 @@ export const apiService = {
     try {
       const response = await fetch(`${API_URL}/funcionarios/${id}`, {
         method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
 
       if (!response.ok) {
@@ -104,6 +107,30 @@ export const apiService = {
       }
     } catch (error) {
       console.error('Error deleting funcionario:', error);
+      throw error;
+    }
+  },
+
+  // Verify operator password
+  async verifyOperatorPassword(matricula: string, senha: string): Promise<{ success: boolean; message: string; funcionario?: any }> {
+    try {
+      const response = await fetch(`${API_URL}/operators/verify-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ matricula, senha }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao verificar senha');
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error verifying password:', error);
       throw error;
     }
   },

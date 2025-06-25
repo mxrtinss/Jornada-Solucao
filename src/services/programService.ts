@@ -199,9 +199,9 @@ export const getDashboardData = async (): Promise<DashboardData> => {
           completed: mockPrograms.filter(p => p.status === 'Concluído').length,
           inProgress: mockPrograms.filter(p => p.status === 'Em Andamento').length,
           pending: mockPrograms.filter(p => p.status === 'Pendente').length,
-          remake: mockPrograms.filter(p => p.status === 'Refazer').length, // Adicionando contagem de programas para refazer
+          remake: mockPrograms.filter(p => p.status === 'Refazer').length
         },
-        activePrograms: mockPrograms.filter(p => p.status !== 'Concluído'),
+        activePrograms: mockPrograms.filter(p => p.status === 'Em Andamento')
       });
     }, 1000);
   });
@@ -211,29 +211,15 @@ export const getCompletedPrograms = async (): Promise<Program[]> => {
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve(mockPrograms.filter(p => p.status === 'Concluído'));
-    }, 1000);
+    }, 500);
   });
 };
 
 export const getActivePrograms = async (): Promise<Program[]> => {
   return new Promise((resolve) => {
     setTimeout(() => {
-      // Filtrar programas ativos (não concluídos)
-      const activePrograms = mockPrograms.filter(p => p.status !== 'Concluído');
-      
-      // Ordenar programas: Em Andamento > Pendente > Refazer
-      const sortedPrograms = activePrograms.sort((a, b) => {
-        const statusOrder = {
-          'Em Andamento': 1,
-          'Pendente': 2,
-          'Refazer': 3
-        };
-        
-        return statusOrder[a.status] - statusOrder[b.status];
-      });
-      
-      resolve(sortedPrograms);
-    }, 1000);
+      resolve(mockPrograms.filter(p => p.status === 'Em Andamento'));
+    }, 500);
   });
 };
 

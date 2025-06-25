@@ -1,1 +1,0 @@
-Esta pasta contém imagens estáticas que serão servidas diretamente.

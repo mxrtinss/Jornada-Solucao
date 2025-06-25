@@ -568,7 +568,14 @@ const ProgramDetailPage: React.FC = () => {
                 <SaveIcon className="h-5 w-5 mr-2 text-teal-700" />
                 Assinatura Digital
               </h3>
-              <DigitalSignature ref={signatureRef} onChange={handleSignatureChange} />
+              <DigitalSignature 
+                ref={signatureRef} 
+                onChange={handleSignatureChange}
+                operators={selectedOperators}
+                onOperatorAuthenticated={(operator) => {
+                  console.log(`Operador ${operator.nome} autenticado com sucesso`);
+                }}
+              />
             </div>
 
             {/* Submit Buttons */}

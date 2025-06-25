@@ -19,6 +19,7 @@ export interface Operator {
   telefone?: string;
   dataAdmissao?: string;
   ativo?: boolean;
+  senha?: string; // Senha para autenticação individual
 }
 
 // Tipo para programa

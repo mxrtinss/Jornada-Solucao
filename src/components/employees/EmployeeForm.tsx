@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Operator as Employee } from '../../types/index';
-import { X } from 'lucide-react';
+import { X, Eye, EyeOff } from 'lucide-react';
 
 interface EmployeeFormProps {
   employee?: Employee;
@@ -21,9 +21,11 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
     email: '',
     telefone: '',
     dataAdmissao: '',
-    ativo: true
+    ativo: true,
+    senha: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (employee) {
@@ -34,10 +36,11 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target as HTMLInputElement;
+    const checked = (e.target as HTMLInputElement).checked;
     
     setFormData({
       ...formData,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+      [name]: type === 'checkbox' ? checked : value
     });
   };
 
@@ -52,6 +55,10 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleTogglePassword = () => {
+    setShowPassword(!showPassword);
   };
 
   return (
@@ -189,6 +196,40 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
               required
               disabled={isSubmitting}
             />
+          </div>
+          
+          {/* Senha */}
+          <div>
+            <label htmlFor="senha" className="block text-sm font-medium text-gray-700 mb-1">
+              Senha para Assinatura
+            </label>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                id="senha"
+                name="senha"
+                value={formData.senha}
+                onChange={handleChange}
+                className="w-full p-2 pr-10 border border-gray-300 rounded-md"
+                placeholder="Senha para autenticação"
+                disabled={isSubmitting}
+              />
+              <button
+                type="button"
+                onClick={handleTogglePassword}
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                disabled={isSubmitting}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </button>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              Senha usada para autenticar assinaturas digitais
+            </p>
           </div>
           
           {/* Status (Ativo/Inativo) */}

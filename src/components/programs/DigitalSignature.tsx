@@ -1,17 +1,28 @@
 import React, { useRef, useEffect, useState, forwardRef, useImperativeHandle } from 'react';
 import { RefreshCwIcon, CheckIcon } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { Operator } from '../../types';
+import OperatorAuthModal from './OperatorAuthModal';
 
 interface DigitalSignatureProps {
   onChange?: (dataUrl: string) => void;
+  operators?: Operator[];
+  onOperatorAuthenticated?: (operator: Operator) => void;
 }
 
-const DigitalSignature = forwardRef<any, DigitalSignatureProps>(({ onChange }, ref) => {
+const DigitalSignature = forwardRef<any, DigitalSignatureProps>(({ 
+  onChange, 
+  operators = [], 
+  onOperatorAuthenticated 
+}, ref) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasSignature, setHasSignature] = useState(false);
   const [lastX, setLastX] = useState(0);
   const [lastY, setLastY] = useState(0);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [currentOperator, setCurrentOperator] = useState<Operator | null>(null);
+  const [currentSignatureData, setCurrentSignatureData] = useState<string>('');
 
   // Expor métodos para o componente pai através da ref
   useImperativeHandle(ref, () => ({
@@ -74,6 +85,8 @@ const DigitalSignature = forwardRef<any, DigitalSignatureProps>(({ onChange }, r
     
     ctx.beginPath();
     ctx.moveTo(x, y);
+    setLastX(x);
+    setLastY(y);
   };
   
   const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
@@ -98,16 +111,22 @@ const DigitalSignature = forwardRef<any, DigitalSignatureProps>(({ onChange }, r
     
     ctx.lineTo(x, y);
     ctx.stroke();
-    setHasSignature(true);
-    
-    // Notify parent component about signature change
-    if (onChange) {
-      onChange(canvas.toDataURL());
-    }
+    setLastX(x);
+    setLastY(y);
   };
   
   const endDrawing = () => {
     setIsDrawing(false);
+    setHasSignature(true);
+    
+    // Notify parent component
+    if (onChange) {
+      const dataUrl = canvasRef.current?.toDataURL();
+      if (dataUrl) {
+        onChange(dataUrl);
+        setCurrentSignatureData(dataUrl);
+      }
+    }
   };
   
   const clearSignature = () => {
@@ -121,7 +140,7 @@ const DigitalSignature = forwardRef<any, DigitalSignatureProps>(({ onChange }, r
     ctx.fillStyle = '#f9fafb';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Add border
+    // Add border back
     ctx.strokeStyle = '#e5e7eb';
     ctx.lineWidth = 1;
     ctx.strokeRect(0, 0, canvas.width, canvas.height);
@@ -131,13 +150,30 @@ const DigitalSignature = forwardRef<any, DigitalSignatureProps>(({ onChange }, r
     ctx.strokeStyle = '#333';
     
     setHasSignature(false);
-    
-    // Notify parent component
-    if (onChange) {
-      onChange('');
-    }
+    setCurrentSignatureData('');
   };
-  
+
+  const handleOperatorAuth = (operator: Operator) => {
+    setCurrentOperator(operator);
+    setShowAuthModal(true);
+  };
+
+  const handleAuthSuccess = (success: boolean) => {
+    if (success && currentOperator && currentSignatureData) {
+      if (onOperatorAuthenticated) {
+        onOperatorAuthenticated(currentOperator);
+      }
+    }
+    
+    setShowAuthModal(false);
+    setCurrentOperator(null);
+  };
+
+  const handleAuthCancel = () => {
+    setShowAuthModal(false);
+    setCurrentOperator(null);
+  };
+
   return (
     <div className="space-y-3">
       <div 
@@ -180,6 +216,14 @@ const DigitalSignature = forwardRef<any, DigitalSignatureProps>(({ onChange }, r
       <p className="text-xs text-gray-500 text-center">
         Assine acima usando seu dedo ou mouse
       </p>
+
+      {/* Modal de Autenticação */}
+      <OperatorAuthModal
+        operator={currentOperator!}
+        onAuthenticate={handleAuthSuccess}
+        onCancel={handleAuthCancel}
+        isVisible={showAuthModal}
+      />
     </div>
   );
 });
