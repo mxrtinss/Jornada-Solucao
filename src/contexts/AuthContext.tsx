@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 interface AuthContextType {
   isAuthenticated: boolean;
   user: User | null;
-  login: (username: string, password: string, rememberMe: boolean) => Promise<boolean>;
+  login: (username: string, password: string, rememberMe: boolean, machineId?: string) => Promise<boolean>;
   logout: () => void;
   isWeekendLocked: boolean;
   unlockWeekend: (password: string) => boolean;
@@ -15,6 +15,7 @@ interface User {
   username: string;
   name: string;
   role: string;
+  machineId?: string;
 }
 
 // Adicione a senha de desbloqueio do final de semana
@@ -95,7 +96,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
   
-  const login = async (username: string, password: string, rememberMe: boolean): Promise<boolean> => {
+  const login = async (username: string, password: string, rememberMe: boolean, machineId?: string): Promise<boolean> => {
     // In a real app, this would be an API call
     // This is a mock implementation for demo purposes
     try {
@@ -109,6 +110,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           username,
           name: 'F1400',
           role: 'maquina',
+          machineId,
         };
         
         setUser(mockUser);

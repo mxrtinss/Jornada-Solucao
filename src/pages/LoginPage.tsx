@@ -2,20 +2,30 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
-import { UserIcon, LockIcon, Loader2Icon, EyeIcon, EyeOffIcon } from 'lucide-react';
+import { UserIcon, LockIcon, Loader2Icon, EyeIcon, EyeOffIcon, MonitorIcon } from 'lucide-react';
 import { LogoIcon } from '../components/icons/LogoIcon';
 import { InputField } from '../components/ui/InputField';
+import { Dropdown } from '../components/ui/Dropdown';
 import { Button } from '../components/ui/Button';
 import { validateLoginForm } from '../utils/validation';
 
 const LoginPage: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [machineId, setMachineId] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Machine options with MAC-XXX format
+  const machineOptions = [
+    { value: 'MAC-001', label: 'MAC-001' },
+    { value: 'MAC-002', label: 'MAC-002' },
+    { value: 'MAC-003', label: 'MAC-003' },
+    { value: 'MAC-004', label: 'MAC-004' },
+    { value: 'MAC-005', label: 'MAC-005' },
+  ];
   
   const { login} = useAuth();
   const { showToast } = useToast();
@@ -34,7 +44,7 @@ const LoginPage: React.FC = () => {
     e.preventDefault();
     
     // Validate form
-    const formErrors = validateLoginForm(username, password);
+    const formErrors = validateLoginForm(username, password, machineId);
     if (Object.keys(formErrors).length > 0) {
       setErrors(formErrors);
       return;
@@ -48,8 +58,8 @@ const LoginPage: React.FC = () => {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Login logic
-      const success = await login(username, password, rememberMe);
+      // Login logic with machine ID
+      const success = await login(username, password, rememberMe, machineId);
       
       if (success) {
         showToast('Login realizado com sucesso', 'success');
@@ -112,6 +122,17 @@ const LoginPage: React.FC = () => {
               )}
             </button>
           </div>
+
+          <Dropdown
+            id="machineId"
+            label="Máquina"
+            options={machineOptions}
+            value={machineId}
+            onChange={setMachineId}
+            placeholder="Selecione a máquina"
+            error={errors.machineId}
+            required
+          />
           
           <div className="flex items-center justify-between">
             <div className="flex items-center">
