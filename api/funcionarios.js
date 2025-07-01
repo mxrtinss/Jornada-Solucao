@@ -10,21 +10,17 @@ const options = {
 };
 
 // Use connection caching for serverless functions
-let cachedClient = null;
-let cachedDb = null;
+let cached = global._mongoClientPromise;
+
+if (!cached) {
+  const client = new MongoClient(uri, options);
+  cached = client.connect();
+  global._mongoClientPromise = cached;
+}
 
 async function connectToDatabase() {
-  if (cachedClient && cachedDb) {
-    return { client: cachedClient, db: cachedDb };
-  }
-
-  const client = new MongoClient(uri, options);
-  await client.connect();
+  const client = await cached;
   const db = client.db('Simoldes');
-  
-  cachedClient = client;
-  cachedDb = db;
-  
   return { client, db };
 }
 
