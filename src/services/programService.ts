@@ -201,7 +201,11 @@ export const getDashboardData = async (): Promise<DashboardData> => {
           pending: mockPrograms.filter(p => p.status === 'Pendente').length,
           remake: mockPrograms.filter(p => p.status === 'Refazer').length
         },
-        activePrograms: mockPrograms.filter(p => p.status === 'Em Andamento')
+        activePrograms: mockPrograms.filter(p => 
+          p.status === 'Em Andamento' || 
+          p.status === 'Refazer' || 
+          p.status === 'Pendente'
+        )
       });
     }, 1000);
   });
@@ -218,7 +222,11 @@ export const getCompletedPrograms = async (): Promise<Program[]> => {
 export const getActivePrograms = async (): Promise<Program[]> => {
   return new Promise((resolve) => {
     setTimeout(() => {
-      resolve(mockPrograms.filter(p => p.status === 'Em Andamento'));
+      resolve(mockPrograms.filter(p => 
+        p.status === 'Em Andamento' || 
+        p.status === 'Refazer' || 
+        p.status === 'Pendente'
+      ));
     }, 500);
   });
 };
