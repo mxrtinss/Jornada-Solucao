@@ -6,7 +6,7 @@ const mockPrograms: Program[] = [
     programId: 'PRG001',
     material: '1731',
     reference: 'EM Z: 20,0',
-    machine: 'F1400',
+    machine: 'MAC-001',
     status: 'Em Andamento',
     tools: [
       {
@@ -53,7 +53,7 @@ const mockPrograms: Program[] = [
     programId: 'PRG002',
     material: '1730',
     reference: 'EM Z: 20,0',
-    machine: 'F1400',
+    machine: 'MAC-001',
     status: 'Pendente',
     tools: [
       {
@@ -96,6 +96,8 @@ const mockPrograms: Program[] = [
     center: 'X0,0 Y0,0'
   }
 ];
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 export const getPrograms = async (): Promise<Program[]> => {
   return new Promise((resolve) => {
