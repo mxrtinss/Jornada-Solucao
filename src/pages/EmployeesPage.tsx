@@ -15,13 +15,13 @@ function EmployeesPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Filter employees based on search term
-  const filteredEmployees = employees.filter(employee => 
+  // Filter employees based on search term - add safety check
+  const filteredEmployees = Array.isArray(employees) ? employees.filter(employee => 
     employee.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
     employee.matricula.includes(searchTerm) ||
     (employee.cargo && employee.cargo.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (employee.departamento && employee.departamento.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  ) : [];
 
   const handleEdit = (employee: Employee) => {
     setSelectedEmployee(employee);
