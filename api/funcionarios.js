@@ -1,7 +1,9 @@
 import { MongoClient } from 'mongodb';
 
 // MongoDB connection string
-const uri = process.env.MONGODB_URI || "mongodb+srv://caio0109:123mudar@simoldes.d3zsooc.mongodb.net/?retryWrites=true&w=majority&appName=simoldes";
+// const uri = process.env.MONGODB_URI || "mongodb+srv://caio0109:123mudar@simoldes.d3zsooc.mongodb.net/?retryWrites=true&w=majority&appName=simoldes";
+ const uri = process.env.MONGODB_URI || "mongodb+srv://caio0109:123mudar@simoldes.d3zsooc.mongodb.net/?appName=simoldes";
+
 
 // Connection options with shorter timeouts for serverless environment
 const options = {
